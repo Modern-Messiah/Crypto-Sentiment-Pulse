@@ -217,5 +217,7 @@ async def websocket_endpoint(websocket: WebSocket):
     except WebSocketDisconnect:
         manager.disconnect(websocket)
     except Exception as e:
+        import traceback
         logger.error(f"WebSocket error: {e}")
+        logger.error(traceback.format_exc())
         manager.disconnect(websocket)

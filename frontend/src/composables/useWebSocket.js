@@ -30,6 +30,7 @@ export function useWebSocket(url) {
             ws.onmessage = (event) => {
                 try {
                     const message = JSON.parse(event.data)
+                    console.log('WS Message:', message.type, Object.keys(message.data || {}).length)
                     if (message.type === 'prices' && message.data) {
                         // Отслеживаем изменения цен для анимации
                         const newPrices = message.data

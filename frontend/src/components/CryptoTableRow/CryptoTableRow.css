@@ -1,0 +1,98 @@
+td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    transition: background-color 0.3s ease;
+}
+
+tr:last-child td {
+    border-bottom: none;
+}
+
+tr:hover {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+/* Row Flash Animations */
+.row-flash-green td {
+    background: rgba(0, 208, 132, 0.1);
+    animation: bgFlashGreen 0.8s ease-out;
+}
+
+.row-flash-red td {
+    background: rgba(255, 71, 87, 0.1);
+    animation: bgFlashRed 0.8s ease-out;
+}
+
+@keyframes bgFlashGreen {
+    0% {
+        background: rgba(0, 208, 132, 0.2);
+    }
+
+    100% {
+        background: transparent;
+    }
+}
+
+@keyframes bgFlashRed {
+    0% {
+        background: rgba(255, 71, 87, 0.2);
+    }
+
+    100% {
+        background: transparent;
+    }
+}
+
+.coin-cell {
+    display: flex;
+    align-items: baseline;
+    gap: 0.25rem;
+}
+
+.coin-symbol {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.coin-pair {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.text-right {
+    text-align: right;
+}
+
+.font-mono {
+    font-family: 'SF Mono', 'Roboto Mono', monospace;
+    letter-spacing: -0.02em;
+}
+
+.price-cell {
+    transition: transform 0.2s;
+}
+
+.row-flash-green .price-cell {
+    color: var(--success);
+    transform: scale(1.05);
+}
+
+.row-flash-red .price-cell {
+    color: var(--danger);
+    transform: scale(1.05);
+}
+
+.change-pill {
+    font-weight: 500;
+}
+
+@media (max-width: 600px) {
+    .mobile-hide {
+        display: none;
+    }
+
+    td {
+        padding: 0.75rem 0.5rem;
+    }
+}
