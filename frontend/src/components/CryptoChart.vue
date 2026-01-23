@@ -41,54 +41,135 @@ const props = defineProps({
   }
 })
 
+// Format price for display
+const formatPrice = (value) => {
+  if (value >= 1000) {
+    return '$' + value.toLocaleString('en-US', { maximumFractionDigits: 0 })
+  } else if (value >= 1) {
+    return '$' + value.toFixed(2)
+  } else {
+    return '$' + value.toFixed(4)
+  }
+}
+
+// Calculate price stats
+const priceStats = computed(() => {
+  if (!props.history.length) return { min: 0, max: 0, change: 0, changePercent: 0 }
+  
+  const prices = props.history.map(h => h.price)
+  const min = Math.min(...prices)
+  const max = Math.max(...prices)
+  const first = prices[0]
+  const last = prices[prices.length - 1]
+  const change = last - first
+  const changePercent = first ? ((change / first) * 100) : 0
+  
+  return { min, max, change, changePercent, first, last }
+})
+
 const chartData = computed(() => {
   return {
-    labels: props.history.map(h => new Date(h.time).toLocaleTimeString()),
+    labels: props.history.map(h => {
+      const date = new Date(h.time)
+      return date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
+    }),
     datasets: [
       {
         label: 'Price',
         backgroundColor: (context) => {
           const ctx = context.chart.ctx;
-          const gradient = ctx.createLinearGradient(0, 0, 0, 200);
-          gradient.addColorStop(0, hexToRgba(props.color, 0.5));
-          gradient.addColorStop(1, hexToRgba(props.color, 0));
+          const gradient = ctx.createLinearGradient(0, 0, 0, 150);
+          gradient.addColorStop(0, hexToRgba(props.color, 0.4));
+          gradient.addColorStop(1, hexToRgba(props.color, 0.02));
           return gradient;
         },
         borderColor: props.color,
         borderWidth: 2,
-        pointRadius: 0, // Hide points for clean look
-        pointHoverRadius: 4,
+        pointRadius: 0,
+        pointHoverRadius: 5,
+        pointHoverBackgroundColor: props.color,
+        pointHoverBorderColor: '#fff',
+        pointHoverBorderWidth: 2,
         data: props.history.map(h => h.price),
         fill: true,
-        tension: 0.4 // Smooth curve
+        tension: 0.3
       }
     ]
   }
 })
 
-const chartOptions = {
+const chartOptions = computed(() => ({
   responsive: true,
   maintainAspectRatio: false,
+  animation: {
+    duration: 300
+  },
   plugins: {
     legend: { display: false },
     tooltip: {
-      mode: 'index',
-      intersect: false,
+      enabled: true,
+      backgroundColor: 'rgba(15, 15, 26, 0.95)',
+      titleColor: '#fff',
+      bodyColor: '#fff',
+      borderColor: 'rgba(255,255,255,0.1)',
+      borderWidth: 1,
+      padding: 12,
+      displayColors: false,
       callbacks: {
-        label: (context) => `$${context.raw.toFixed(2)}`
+        title: (items) => {
+          if (items.length) {
+            return items[0].label
+          }
+          return ''
+        },
+        label: (context) => {
+          return formatPrice(context.raw)
+        },
+        afterLabel: (context) => {
+          const firstPrice = props.history[0]?.price
+          if (!firstPrice) return ''
+          const diff = context.raw - firstPrice
+          const percent = ((diff / firstPrice) * 100).toFixed(2)
+          const sign = diff >= 0 ? '+' : ''
+          return `${sign}${percent}% from start`
+        }
       }
     }
   },
   scales: {
-    x: { display: false }, // Hide X axis
-    y: { display: false }  // Hide Y axis
+    x: {
+      display: true,
+      grid: {
+        display: false,
+        drawBorder: false
+      },
+      ticks: {
+        color: 'rgba(255, 255, 255, 0.4)',
+        font: { size: 9 },
+        maxTicksLimit: 5,
+        maxRotation: 0
+      }
+    },
+    y: {
+      display: true,
+      position: 'right',
+      grid: {
+        color: 'rgba(255, 255, 255, 0.05)',
+        drawBorder: false
+      },
+      ticks: {
+        color: 'rgba(255, 255, 255, 0.4)',
+        font: { size: 9 },
+        maxTicksLimit: 4,
+        callback: (value) => formatPrice(value)
+      }
+    }
   },
   interaction: {
-    mode: 'nearest',
-    axis: 'x',
+    mode: 'index',
     intersect: false
   }
-}
+}))
 
 // Helper to convert hex to rgba
 const hexToRgba = (hex, alpha) => {
@@ -101,7 +182,8 @@ const hexToRgba = (hex, alpha) => {
 
 <style scoped>
 .chart-container {
-  height: 100px; /* Sparkline height */
+  height: 120px;
   width: 100%;
+  position: relative;
 }
 </style>

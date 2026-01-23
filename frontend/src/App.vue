@@ -88,7 +88,7 @@ import { useWebSocket } from './composables/useWebSocket'
 
 const WS_URL = import.meta.env.PROD 
   ? `ws://${window.location.host}/ws` 
-  : 'ws://localhost:8000/ws'
+  : 'ws://localhost:8080/ws'
 
 const { prices, isConnected, error, lastUpdate } = useWebSocket(WS_URL)
 

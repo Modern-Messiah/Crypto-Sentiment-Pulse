@@ -1,18 +1,16 @@
-version: '3.8'
-
 services:
   backend:
     build: ./backend
     container_name: crypto_backend
     ports:
-      - "8000:8000"
+      - "8080:8080"
     volumes:
       - ./backend:/app
     environment:
       - PYTHONUNBUFFERED=1
       - DATABASE_URL=postgresql://user:pass@db:5432/cryptodb
       - REDIS_URL=redis://redis:6379/0
-      - BACKEND_API_URL=http://backend:8000/api/prices
+      - BACKEND_API_URL=http://backend:8080/api/prices
     depends_on:
       - db
       - redis
@@ -26,7 +24,7 @@ services:
     environment:
       - DATABASE_URL=postgresql://user:pass@db:5432/cryptodb
       - REDIS_URL=redis://redis:6379/0
-      - BACKEND_API_URL=http://backend:8000/api/prices
+      - BACKEND_API_URL=http://backend:8080/api/prices
     depends_on:
       - db
       - redis
@@ -43,7 +41,7 @@ services:
     environment:
       - DATABASE_URL=postgresql://user:pass@db:5432/cryptodb
       - REDIS_URL=redis://redis:6379/0
-      - BACKEND_API_URL=http://backend:8000/api/prices
+      - BACKEND_API_URL=http://backend:8080/api/prices
     depends_on:
       - db
       - redis
