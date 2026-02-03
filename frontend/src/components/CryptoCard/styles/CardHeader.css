@@ -1,0 +1,40 @@
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    z-index: 1;
+}
+
+.symbol-info {
+    display: flex;
+    align-items: baseline;
+    gap: 0.25rem;
+}
+
+.symbol-info h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.pair {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.change-badge {
+    font-size: 0.875rem;
+    font-weight: 600;
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--radius-sm);
+}
+
+.bg-success-dim {
+    background: rgba(0, 208, 132, 0.1);
+    color: var(--success);
+}
+
+.bg-danger-dim {
+    background: rgba(255, 71, 87, 0.1);
+    color: var(--danger);
+}

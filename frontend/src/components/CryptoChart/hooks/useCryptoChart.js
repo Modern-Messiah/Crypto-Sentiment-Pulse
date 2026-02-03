@@ -23,7 +23,7 @@ ChartJS.register(
     Filler
 )
 
-export const useChartSetup = (props) => {
+export const useCryptoChart = (props) => {
     // Format price for display
     const formatPrice = (value) => {
         if (value >= 1000) {

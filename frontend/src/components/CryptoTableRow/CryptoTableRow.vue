@@ -22,8 +22,8 @@
 
 <script setup>
 import { toRefs } from 'vue'
-import { useCryptoTableRow } from './CryptoTableRow.js'
-import './CryptoTableRow.css'
+import { useCryptoTableRow } from './hooks/useCryptoTableRow.js'
+import './styles/CryptoTableRow.css'
 
 const props = defineProps({
   coin: {

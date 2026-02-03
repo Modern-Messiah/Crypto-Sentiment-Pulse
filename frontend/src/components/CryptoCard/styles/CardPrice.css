@@ -1,0 +1,48 @@
+.price-container {
+    z-index: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.price {
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    transition: color 0.3s;
+}
+
+/* Text color feedback during update */
+.price-up-trigger .price {
+    color: var(--success);
+    text-shadow: 0 0 20px rgba(0, 208, 132, 0.3);
+}
+
+.price-down-trigger .price {
+    color: var(--danger);
+    text-shadow: 0 0 20px rgba(255, 71, 87, 0.3);
+}
+
+.chart-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    transition: all 0.2s;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.chart-btn:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+}
+
+.chart-btn.active {
+    color: var(--accent-primary);
+    background: rgba(102, 126, 234, 0.1);
+}

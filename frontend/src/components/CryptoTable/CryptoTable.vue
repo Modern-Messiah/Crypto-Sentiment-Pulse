@@ -3,7 +3,7 @@
     <div class="table-header">
       <h3>Market Overview</h3>
       <div class="search-box">
-        <span class="search-icon"></span>
+        <span class="search-icon">🔍</span>
         <input 
           type="text" 
           v-model="searchQuery" 
@@ -53,9 +53,9 @@
 </template>
 
 <script setup>
-import { useCryptoTable } from './CryptoTable.js'
-import CryptoTableRow from '../CryptoTableRow/index.vue'
-import './CryptoTable.css'
+import { useCryptoTable } from './hooks/useCryptoTable.js'
+import CryptoTableRow from '../CryptoTableRow/CryptoTableRow.vue'
+import './styles/CryptoTable.css'
 
 const props = defineProps({
   prices: {

@@ -1,0 +1,50 @@
+.glass-card.crypto-card {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    height: fit-content;
+}
+
+.crypto-card::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+/* Updated Animation Logic */
+.price-up-trigger::after {
+    background: radial-gradient(circle at center,
+            var(--success-bg) 0%,
+            transparent 70%);
+    animation: flash 0.8s ease-out forwards;
+}
+
+.price-down-trigger::after {
+    background: radial-gradient(circle at center,
+            var(--danger-bg) 0%,
+            transparent 70%);
+    animation: flash 0.8s ease-out forwards;
+}
+
+@keyframes flash {
+    0% {
+        opacity: 1;
+        transform: scale(0.8);
+    }
+
+    100% {
+        opacity: 0;
+        transform: scale(1.5);
+    }
+}

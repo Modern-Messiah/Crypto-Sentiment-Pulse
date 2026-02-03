@@ -1,7 +1,7 @@
 import { computed, ref } from 'vue'
-import Header from './components/Header/index.vue'
-import CryptoCard from './components/CryptoCard/index.vue'
-import CryptoTable from './components/CryptoTable/index.vue'
+import Header from './components/Header/Header.vue'
+import CryptoCard from './components/CryptoCard/CryptoCard.vue'
+import CryptoTable from './components/CryptoTable/CryptoTable.vue'
 import { useWebSocket } from './composables/useWebSocket'
 
 export const useApp = () => {

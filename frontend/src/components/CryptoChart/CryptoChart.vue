@@ -5,8 +5,8 @@
 </template>
 
 <script setup>
-import { useChartSetup } from './CryptoChart.js'
-import './CryptoChart.css'
+import { useCryptoChart } from './hooks/useCryptoChart.js'
+import './styles/CryptoChart.css'
 
 const props = defineProps({
   history: {
@@ -19,5 +19,5 @@ const props = defineProps({
   }
 })
 
-const { Line, chartData, chartOptions } = useChartSetup(props)
+const { Line, chartData, chartOptions } = useCryptoChart(props)
 </script>
