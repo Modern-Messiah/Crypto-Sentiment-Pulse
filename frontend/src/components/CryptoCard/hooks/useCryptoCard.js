@@ -15,7 +15,7 @@ export const useCryptoCard = (props) => {
         try {
             const WS_URL = import.meta.env.PROD ? "" : "http://localhost:8080";
             const res = await fetch(
-                `${WS_URL}/api/history/${props.symbol}?period=${currentPeriod.value}`,
+                `${WS_URL}/api/v1/history/${props.symbol}?period=${currentPeriod.value}`,
             );
             const json = await res.json();
             if (json.history) {

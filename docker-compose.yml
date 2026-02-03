@@ -10,7 +10,7 @@ services:
       - PYTHONUNBUFFERED=1
       - DATABASE_URL=postgresql://user:pass@db:5432/cryptodb
       - REDIS_URL=redis://redis:6379/0
-      - BACKEND_API_URL=http://backend:8080/api/prices
+      - BACKEND_API_URL=http://backend:8080/api/v1/prices/
     depends_on:
       - db
       - redis
@@ -20,11 +20,11 @@ services:
   celery-worker:
     build: ./backend
     container_name: crypto_worker
-    command: celery -A celery_worker.celery worker --loglevel=info
+    command: celery -A app.tasks.price_tasks.celery_app worker --loglevel=info
     environment:
       - DATABASE_URL=postgresql://user:pass@db:5432/cryptodb
       - REDIS_URL=redis://redis:6379/0
-      - BACKEND_API_URL=http://backend:8080/api/prices
+      - BACKEND_API_URL=http://backend:8080/api/v1/prices/
     depends_on:
       - db
       - redis
@@ -37,11 +37,11 @@ services:
   celery-beat:
     build: ./backend
     container_name: crypto_beat
-    command: celery -A celery_worker.celery beat --loglevel=info
+    command: celery -A app.tasks.price_tasks.celery_app beat --loglevel=info
     environment:
       - DATABASE_URL=postgresql://user:pass@db:5432/cryptodb
       - REDIS_URL=redis://redis:6379/0
-      - BACKEND_API_URL=http://backend:8080/api/prices
+      - BACKEND_API_URL=http://backend:8080/api/v1/prices/
     depends_on:
       - db
       - redis

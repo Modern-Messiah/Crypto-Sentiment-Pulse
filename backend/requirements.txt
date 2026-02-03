@@ -7,3 +7,4 @@ psycopg2-binary==2.9.9
 celery==5.3.6
 redis==5.0.1
 requests==2.31.0
+pydantic-settings==2.1.0

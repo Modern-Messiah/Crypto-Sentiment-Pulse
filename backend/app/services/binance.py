@@ -2,28 +2,47 @@ import asyncio
 import json
 import logging
 import websockets
-
 from collections import deque, defaultdict
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class BinancePriceStream:
-    """Класс для получения live данных от Binance WebSocket"""
     
     def __init__(self, symbols: list[str]):
         self.symbols = [s.lower() for s in symbols]
         self.prices = {}
-        # Храним историю: symbol -> deque([(ts, price), ...])
         self.history = defaultdict(lambda: deque(maxlen=100))
         self._running = False
         self._ws = None
         
+    async def fetch_initial_history(self):
+        import requests
+        
+        logger.info("Fetching initial history for all symbols...")
+        for symbol in self.symbols:
+            try:
+                # Binance klines API (1m interval)
+                symbol_upper = symbol.upper()
+                url = f"https://api.binance.com/api/v3/klines?symbol={symbol_upper}&interval=1m&limit=100"
+                
+                response = await asyncio.to_thread(requests.get, url, timeout=10)
+                if response.status_code == 200:
+                    data = response.json()
+                    for kline in data:
+                        timestamp = kline[0]
+                        price = float(kline[4])
+                        self.history[symbol_upper].append({
+                            'time': timestamp,
+                            'price': price
+                        })
+                logger.info(f"Initialized history for {symbol_upper} ({len(self.history[symbol_upper])} points)")
+            except Exception as e:
+                logger.error(f"Failed to fetch initial history for {symbol}: {e}")
+
     async def start(self):
-        """Запуск WebSocket потока"""
+        await self.fetch_initial_history()
         self._running = True
         
-        # Endpoint for manual subscription
         url = "wss://stream.binance.com:9443/ws"
         
         logger.info(f"Connecting to Binance ({url})...")
@@ -32,7 +51,7 @@ class BinancePriceStream:
             try:
                 async with websockets.connect(url, ping_interval=None) as ws:
                     self._ws = ws
-                    logger.info("Connected! Sending subscription...")
+                    logger.info("Connected to Binance! Sending subscription...")
                     
                     # Manual Subscribe
                     params = [f"{s}@ticker" for s in self.symbols]
@@ -52,25 +71,21 @@ class BinancePriceStream:
                             logger.warning("Binance connection closed, reconnecting...")
                             break
                         except Exception as e:
-                            logger.error(f"Error handling message: {e}")
+                            logger.error(f"Error handling Binance message: {e}")
                             break
                             
             except Exception as e:
                 logger.error(f"Binance connection error: {e}")
                 if self._running:
-                    logger.info("Reconnecting in 5 seconds...")
+                    logger.info("Reconnecting to Binance in 5 seconds...")
                     await asyncio.sleep(5)
     
     async def process_message(self, data: dict):
-        """Обработка сообщения"""
         try:
-            # Ignore subscription response
             if 'result' in data:
-                logger.info("Subscription confirmed")
+                logger.info("Binance subscription confirmed")
                 return
                 
-            # Check event type
-            # Ticker event usually has "e": "24hrTicker"
             event_type = data.get('e')
             
             if event_type == '24hrTicker':
@@ -89,19 +104,17 @@ class BinancePriceStream:
                         'timestamp': timestamp
                     }
                     
-                    # Store in history
                     self.history[symbol].append({
                         'time': timestamp,
                         'price': price
                     })
         except Exception as e:
-            logger.error(f"Error processing data: {e}")
+            logger.error(f"Error processing Binance data: {e}")
     
     def get_prices(self) -> dict:
         return self.prices
         
     def get_history(self, symbol: str) -> list:
-        """Returns list of last 100 prices"""
         if symbol in self.history:
             return list(self.history[symbol])
         return []
@@ -111,7 +124,6 @@ class BinancePriceStream:
         if self._ws:
             await self._ws.close()
 
-# Global instance
 binance_stream: BinancePriceStream | None = None
 
 async def init_binance_stream(symbols: list[str]) -> BinancePriceStream:
