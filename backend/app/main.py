@@ -8,6 +8,7 @@ from app.api.api_v1.api import api_router
 from app.core.config import settings
 from app.core.ws_manager import manager
 from app.services import binance as bs
+from app.services import telegram as tg
 from app.db.session import engine
 from app.db.base import Base
 
@@ -19,13 +20,33 @@ async def lifespan(app: FastAPI):
 
     Base.metadata.create_all(bind=engine)
     
+    # Start Binance stream
     await bs.init_binance_stream(settings.TRACKED_SYMBOLS)
     logger.info(f"Backend started. Tracking {len(settings.TRACKED_SYMBOLS)} symbols")
+    
+    # Start Telegram service
+    tg_service = await tg.init_telegram_service(
+        api_id=settings.TELEGRAM_API_ID,
+        api_hash=settings.TELEGRAM_API_HASH,
+        session_name=settings.TELEGRAM_SESSION_NAME,
+        channels=settings.TELEGRAM_CHANNELS
+    )
+    
+    # Set up real-time broadcast callback
+    async def on_telegram_message(msg):
+        logger.info(f"Broadcasting telegram_update to {len(manager.active_connections)} clients")
+        await manager.broadcast({"type": "telegram_update", "data": msg})
+    
+    tg_service.set_message_callback(on_telegram_message)
+    
+    logger.info(f"Telegram service started. Monitoring {len(settings.TELEGRAM_CHANNELS)} channels")
 
     yield
 
     if bs.binance_stream:
         await bs.binance_stream.close()
+    if tg.telegram_service:
+        await tg.telegram_service.close()
     logger.info("Backend shutdown complete")
 
 app = FastAPI(
@@ -49,6 +70,7 @@ def root():
         "message": settings.PROJECT_NAME,
         "version": "1.0.0",
         "tracked_symbols": settings.TRACKED_SYMBOLS,
+        "telegram_channels": settings.TELEGRAM_CHANNELS,
     }
 
 app.include_router(api_router, prefix=settings.API_V1_STR)
@@ -59,10 +81,19 @@ async def websocket_endpoint(websocket: WebSocket):
 
     try:
         while True:
+            data = {}
+            
+            # Binance prices
             if bs.binance_stream:
                 prices = bs.binance_stream.get_prices()
                 if prices:
-                    await websocket.send_json({"type": "prices", "data": prices})
+                    data["prices"] = prices
+            
+            # Telegram messages are now pushed via callback and loaded via REST API
+            # No need to send them every second in the main loop
+            
+            if data:
+                await websocket.send_json({"type": "update", "data": data})
 
             await asyncio.sleep(1)
 
@@ -75,3 +106,4 @@ async def websocket_endpoint(websocket: WebSocket):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8080)
+

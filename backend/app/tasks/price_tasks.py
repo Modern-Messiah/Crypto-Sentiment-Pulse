@@ -9,16 +9,8 @@ from app.models.price_history import PriceHistory
 
 logger = logging.getLogger(__name__)
 
-celery_app = Celery(__name__, broker=settings.REDIS_URL, backend=settings.REDIS_URL)
+from app.core.celery_app import celery_app
 
-# Configure periodic tasks
-celery_app.conf.beat_schedule = {
-    'save-prices-every-10-seconds': {
-        'task': 'app.tasks.price_tasks.save_price_snapshot',
-        'schedule': 10.0, # seconds
-    },
-}
-celery_app.conf.timezone = 'UTC'
 
 @celery_app.task
 def save_price_snapshot():

@@ -15,64 +15,94 @@
         </div>
       </div>
       
-      <!-- Основной контент -->
-      <div v-if="hasData" class="dashboard-content animate-fade-in">
-        
-        <!-- Controls Toolbar -->
-        <div class="toolbar glass-card">
-          <div class="filter-group">
-            <button 
-              v-for="f in filters" 
-              :key="f.id"
-              class="control-btn"
-              :class="{ active: filterMode === f.id }"
-              @click="filterMode = f.id"
-            >
-              {{ f.label }}
-            </button>
-          </div>
+      <!-- Navigation Tabs -->
+      <div class="nav-tabs glass-card">
+          <button 
+            class="nav-tab" 
+            :class="{ active: activeTab === 'prices' }"
+            @click="activeTab = 'prices'"
+          >
+            Prices
+          </button>
           
-          <div class="view-group">
-            <button 
-              class="control-btn icon-btn"
-              :class="{ active: viewMode === 'grid' }"
-              @click="viewMode = 'grid'"
-              title="Grid View"
-            >
-              ⊞
-            </button>
-            <button 
-              class="control-btn icon-btn"
-              :class="{ active: viewMode === 'table' }"
-              @click="viewMode = 'table'"
-              title="Table View"
-            >
-              ☰
-            </button>
-          </div>
-        </div>
-
-        <!-- Grid View -->
-        <div v-if="viewMode === 'grid'" class="cards-grid">
-          <CryptoCard 
-            v-for="coin in displayPrices" 
-            :key="coin.symbol"
-            :symbol="coin.symbol"
-            :data="coin"
-          />
-        </div>
-        
-        <!-- Table View -->
-        <div v-else class="table-container">
-          <CryptoTable :prices="displayPricesArray" />
-        </div>
-        
+          <button 
+            class="nav-tab" 
+            :class="{ active: activeTab === 'telegram' }"
+            @click="activeTab = 'telegram'"
+          >
+            Telegram
+          </button>
       </div>
       
-      <!-- Лоадер при первой загрузке -->
-      <div v-else class="loading-state">
-        <div class="spinner"></div>
-        <p>Connecting to live market data...</p>
+      <!-- Prices Tab -->
+      <div v-if="activeTab === 'prices'" class="dashboard-content animate-fade-in">
+        <div v-if="hasData">
+          <!-- Controls Toolbar -->
+          <div class="toolbar glass-card">
+            <div class="filter-group">
+              <button 
+                v-for="f in filters" 
+                :key="f.id"
+                class="control-btn"
+                :class="{ active: filterMode === f.id }"
+                @click="filterMode = f.id"
+              >
+                {{ f.label }}
+              </button>
+            </div>
+            
+            <div class="view-group">
+              <button 
+                class="control-btn icon-btn"
+                :class="{ active: viewMode === 'grid' }"
+                @click="viewMode = 'grid'"
+                title="Grid View"
+              >
+                ⊞
+              </button>
+              <button 
+                class="control-btn icon-btn"
+                :class="{ active: viewMode === 'table' }"
+                @click="viewMode = 'table'"
+                title="Table View"
+              >
+                ☰
+              </button>
+            </div>
+          </div>
+
+          <!-- Grid View -->
+          <div v-if="viewMode === 'grid'" class="cards-grid">
+            <CryptoCard 
+              v-for="coin in displayPrices" 
+              :key="coin.symbol"
+              :symbol="coin.symbol"
+              :data="coin"
+            />
+          </div>
+          
+          <!-- Table View -->
+          <div v-else class="table-wrapper">
+            <CryptoTable :prices="displayPricesArray" />
+          </div>
+        </div>
+        
+        <!-- Лоадер при первой загрузке -->
+        <div v-else class="loading-state">
+          <div class="spinner"></div>
+          <p>Connecting to live market data...</p>
+        </div>
+      </div>
+      
+      <!-- Telegram Tab -->
+      <div v-else-if="activeTab === 'telegram'" class="dashboard-content animate-fade-in">
+        <TelegramFeed 
+          :messages="telegramMessages"
+          :is-connected="isConnected"
+          :is-loading-more="isLoadingMore"
+          :all-loaded="allLoaded"
+          @load-more="loadMoreMessages"
+        />
       </div>
       
     </main>
@@ -83,6 +113,7 @@
 import Header from './components/Header/Header.vue'
 import CryptoCard from './components/CryptoCard/CryptoCard.vue'
 import CryptoTable from './components/CryptoTable/CryptoTable.vue'
+import TelegramFeed from './components/TelegramFeed/TelegramFeed.vue'
 import { useApp } from './App.js'
 import './App.css'
 
@@ -93,8 +124,15 @@ const {
   hasData,
   viewMode,
   filterMode,
+  activeTab,
+  tabs,
   filters,
   displayPrices,
-  displayPricesArray
+  displayPricesArray,
+  telegramMessages,
+  loadMoreMessages,
+  isLoadingMore,
+  allLoaded
 } = useApp()
 </script>
+

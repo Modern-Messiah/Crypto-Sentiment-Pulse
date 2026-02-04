@@ -1,7 +1,4 @@
 import { computed, ref } from 'vue'
-import Header from './components/Header/Header.vue'
-import CryptoCard from './components/CryptoCard/CryptoCard.vue'
-import CryptoTable from './components/CryptoTable/CryptoTable.vue'
 import { useWebSocket } from './composables/useWebSocket'
 
 export const useApp = () => {
@@ -9,10 +6,25 @@ export const useApp = () => {
         ? `ws://${window.location.host}/ws`
         : 'ws://localhost:8080/ws'
 
-    const { prices, isConnected, error, lastUpdate } = useWebSocket(WS_URL)
+    const {
+        prices,
+        telegramMessages,
+        isConnected,
+        error,
+        lastUpdate,
+        loadMoreMessages,
+        isLoadingMore,
+        allLoaded
+    } = useWebSocket(WS_URL)
 
     const viewMode = ref('grid')
     const filterMode = ref('all')
+    const activeTab = ref('prices') // 'prices' or 'telegram'
+
+    const tabs = [
+        { id: 'prices', label: '📊 Prices', icon: '📊' },
+        { id: 'telegram', label: '📱 Telegram', icon: '📱' }
+    ]
 
     const filters = [
         { id: 'all', label: 'All Assets' },
@@ -21,6 +33,7 @@ export const useApp = () => {
     ]
 
     const hasData = computed(() => Object.keys(prices.value).length > 0)
+    const hasTelegramData = computed(() => telegramMessages.value.length > 0)
 
     // Преобразуем объект в массив для удобной фильтрации
     const allPricesArray = computed(() => Object.values(prices.value))
@@ -41,9 +54,6 @@ export const useApp = () => {
     })
 
     const displayPricesArray = computed(() => {
-        // А лучше поправим CryptoTable чуть позже, чтобы он был гибче. 
-        // Но пока, конвертируем массив в объект для пропса.
-
         const obj = {}
         displayPrices.value.forEach(c => {
             obj[c.symbol] = c
@@ -56,10 +66,20 @@ export const useApp = () => {
         lastUpdate,
         error,
         hasData,
+        hasTelegramData,
         viewMode,
         filterMode,
+        activeTab,
+        tabs,
         filters,
         displayPrices,
-        displayPricesArray
+        displayPricesArray,
+        displayPrices,
+        displayPricesArray,
+        telegramMessages,
+        loadMoreMessages,
+        isLoadingMore,
+        allLoaded
     }
 }
+
