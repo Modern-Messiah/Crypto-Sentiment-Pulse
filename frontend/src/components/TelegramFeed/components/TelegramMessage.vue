@@ -50,7 +50,8 @@ const formattedTime = computed(() => {
   const date = new Date(props.message.date)
   return date.toLocaleTimeString('ru-RU', { 
     hour: '2-digit', 
-    minute: '2-digit' 
+    minute: '2-digit',
+    second: '2-digit'
   })
 })
 

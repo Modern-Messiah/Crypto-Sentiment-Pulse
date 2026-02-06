@@ -45,7 +45,7 @@ def get_messages(
             text=msg.text or '',
             views=msg.views or 0,
             forwards=msg.forwards or 0,
-            date=msg.telegram_date.isoformat() if msg.telegram_date else msg.created_at.isoformat(),
+            date=(msg.telegram_date.isoformat() if msg.telegram_date else msg.created_at.isoformat()) + "Z",
             is_demo=False
         )
         for msg in db_messages

@@ -195,8 +195,8 @@ class TelegramService:
                         'text': text_content,
                         'views': getattr(msg, 'views', 0) or 0,
                         'forwards': getattr(msg, 'forwards', 0) or 0,
-                        'date': msg.date.isoformat() if msg.date else datetime.utcnow().isoformat(),
-                        'timestamp': datetime.utcnow().isoformat()
+                        'date': msg.date.isoformat() if msg.date else datetime.utcnow().isoformat() + "Z",
+                        'timestamp': datetime.utcnow().isoformat() + "Z"
                     }
                     self.messages.appendleft(parsed_msg)
                     
@@ -269,8 +269,8 @@ class TelegramService:
                 'text': text_content,
                 'views': getattr(msg_or_event, 'views', 0) or 0,
                 'forwards': getattr(msg_or_event, 'forwards', 0) or 0,
-                'date': msg_or_event.date.isoformat() if hasattr(msg_or_event, 'date') and msg_or_event.date else datetime.utcnow().isoformat(),
-                'timestamp': datetime.utcnow().isoformat(),
+                'date': msg_or_event.date.isoformat() if hasattr(msg_or_event, 'date') and msg_or_event.date else datetime.utcnow().isoformat() + "Z",
+                'timestamp': datetime.utcnow().isoformat() + "Z",
                 'is_edit': is_edit
             }
             
@@ -339,8 +339,8 @@ class TelegramService:
                 'text': text,
                 'views': random.randint(100, 50000),
                 'forwards': random.randint(0, 500),
-                'date': datetime.utcnow().isoformat(),
-                'timestamp': datetime.utcnow().isoformat(),
+                'date': datetime.utcnow().isoformat() + "Z",
+                'timestamp': datetime.utcnow().isoformat() + "Z",
                 'is_demo': True
             }
             
