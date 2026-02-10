@@ -11,37 +11,119 @@ class BinancePriceStream:
     def __init__(self, symbols: list[str]):
         self.symbols = [s.lower() for s in symbols]
         self.prices = {}
-        self.history = defaultdict(lambda: deque(maxlen=100))
+        self.history = defaultdict(lambda: deque(maxlen=1000))
         self._running = False
         self._ws = None
         
     async def fetch_initial_history(self):
         import requests
+        from app.db.session import SessionLocal
+        from app.models.price_history import PriceHistory
+        from datetime import datetime, timezone, timedelta
         
-        logger.info("Fetching initial history for all symbols...")
-        for symbol in self.symbols:
-            try:
-                # Binance klines API (1m interval)
-                symbol_upper = symbol.upper()
-                url = f"https://api.binance.com/api/v3/klines?symbol={symbol_upper}&interval=1m&limit=100"
+        logger.info("Fetching high-res initial history for all symbols (1m + 5m backfill)...")
+        db = SessionLocal()
+        try:
+            tasks = []
+            for symbol in self.symbols:
+                # Fetch 60 candles of 1m = 1 hour high-res
+                tasks.append(self._fetch_and_persist(db, symbol.upper(), "1m", 60))
+                # Fetch 288 candles of 5m = 24 hours
+                tasks.append(self._fetch_and_persist(db, symbol.upper(), "5m", 288))
+            
+            await asyncio.gather(*tasks)
+            logger.info("High-res history fetching completed.")
+        finally:
+            db.close()
+
+    async def _fetch_and_persist(self, db, symbol_upper, interval, limit):
+        import requests
+        from app.models.price_history import PriceHistory
+        from datetime import datetime, timezone
+        
+        try:
+            url = f"https://api.binance.com/api/v3/klines?symbol={symbol_upper}&interval={interval}&limit={limit}"
+            response = await asyncio.to_thread(requests.get, url, timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()
+                new_entries = []
+                for kline in data:
+                    ts_ms = kline[0]
+                    price = float(kline[4])
+                    dt = datetime.fromtimestamp(ts_ms / 1000, tz=timezone.utc).replace(tzinfo=None)
+                    
+                    new_entries.append(PriceHistory(
+                        symbol=symbol_upper,
+                        price=price,
+                        timestamp=dt
+                    ))
                 
-                response = await asyncio.to_thread(requests.get, url, timeout=10)
-                if response.status_code == 200:
-                    data = response.json()
-                    for kline in data:
-                        timestamp = kline[0]
-                        price = float(kline[4])
-                        self.history[symbol_upper].append({
-                            'time': timestamp,
-                            'price': price
-                        })
-                logger.info(f"Initialized history for {symbol_upper} ({len(self.history[symbol_upper])} points)")
+                if new_entries:
+                    await asyncio.to_thread(self._bulk_save_history, db, new_entries, symbol_upper)
+        except Exception as e:
+            logger.error(f"Failed to fetch {interval} history for {symbol_upper}: {e}")
+
+    def _bulk_save_history(self, db, entries, symbol):
+        from app.models.price_history import PriceHistory
+        from datetime import datetime, timedelta
+        
+        # Check existing timestamps to avoid exact duplicates
+        since = min(e.timestamp for e in entries) - timedelta(minutes=1)
+        existing_ts = db.query(PriceHistory.timestamp).filter(
+            PriceHistory.symbol == symbol,
+            PriceHistory.timestamp >= since
+        ).all()
+        existing_set = {t[0] for t in existing_ts}
+        
+        to_insert = [e for e in entries if e.timestamp not in existing_set]
+        if to_insert:
+            db.bulk_save_objects(to_insert)
+            db.commit()
+            logger.info(f"Backfilled {len(to_insert)} new points for {symbol}")
+
+    async def _persistence_loop(self):
+        from app.db.session import SessionLocal
+        from app.models.price_history import PriceHistory
+        from datetime import datetime
+        
+        logger.info("Starting real-time persistence loop (5s)...")
+        while self._running:
+            try:
+                await asyncio.sleep(5)
+                if not self.prices:
+                    continue
+                    
+                db = SessionLocal()
+                try:
+                    new_entries = []
+                    now = datetime.utcnow()
+                    for symbol, data in self.prices.items():
+                        new_entries.append(PriceHistory(
+                            symbol=symbol.upper(),
+                            price=data['price'],
+                            timestamp=now
+                        ))
+                    
+                    if new_entries:
+                        db.bulk_save_objects(new_entries)
+                        db.commit()
+                        logger.debug(f"Persisted {len(new_entries)} symbols to DB")
+                except Exception as e:
+                    logger.error(f"Error in persistence loop: {e}")
+                finally:
+                    db.close()
+            except asyncio.CancelledError:
+                break
             except Exception as e:
-                logger.error(f"Failed to fetch initial history for {symbol}: {e}")
+                logger.error(f"Extreme error in persistence loop: {e}")
 
     async def start(self):
         await self.fetch_initial_history()
         self._running = True
+        
+        # Start persistence loop
+        asyncio.create_task(self._persistence_loop())
         
         url = "wss://stream.binance.com:9443/ws"
         

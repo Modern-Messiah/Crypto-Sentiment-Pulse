@@ -1,4 +1,4 @@
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -58,12 +58,31 @@ export const useCryptoChart = (props) => {
         return { min, max, change, changePercent, first, last }
     })
 
+    const nowAnchor = ref(Date.now())
+    let tickerInterval = null
+
+    // Update 'now' every second to keep the chart scrolling smoothly
+    const startTicker = () => {
+        stopTicker()
+        tickerInterval = setInterval(() => {
+            const latestTs = props.history.length > 0 ? Math.max(...props.history.map(h => h.time)) : 0
+            const clientNow = Date.now()
+            nowAnchor.value = Math.max(clientNow, latestTs)
+        }, 1000)
+    }
+
+    const stopTicker = () => {
+        if (tickerInterval) clearInterval(tickerInterval)
+    }
+
+    watch(() => props.history, (newHistory) => {
+        if (newHistory.length > 0 && !tickerInterval) {
+            startTicker()
+        }
+    }, { immediate: true })
+
     const chartData = computed(() => {
         return {
-            labels: props.history.map(h => {
-                const date = new Date(h.time)
-                return date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
-            }),
             datasets: [
                 {
                     label: 'Price',
@@ -81,7 +100,7 @@ export const useCryptoChart = (props) => {
                     pointHoverBackgroundColor: props.color,
                     pointHoverBorderColor: '#fff',
                     pointHoverBorderWidth: 2,
-                    data: props.history.map(h => h.price),
+                    data: props.history.map(h => ({ x: h.time, y: h.price })),
                     fill: true,
                     tension: 0.3
                 }
@@ -89,84 +108,130 @@ export const useCryptoChart = (props) => {
         }
     })
 
-    const chartOptions = computed(() => ({
-        responsive: true,
-        maintainAspectRatio: false,
-        animation: {
-            duration: 300
-        },
-        plugins: {
-            legend: { display: false },
-            tooltip: {
-                enabled: true,
-                backgroundColor: 'rgba(15, 15, 26, 0.95)',
-                titleColor: '#fff',
-                bodyColor: '#fff',
-                borderColor: 'rgba(255,255,255,0.1)',
-                borderWidth: 1,
-                padding: 12,
-                displayColors: false,
-                callbacks: {
-                    title: (items) => {
-                        if (items.length) {
-                            return items[0].label
+    const chartOptions = computed(() => {
+        const period = props.period || '15m'
+        let periodMs = 15 * 60 * 1000
+        if (period === '1h') periodMs = 60 * 60 * 1000
+        else if (period === '4h') periodMs = 4 * 60 * 60 * 1000
+        else if (period === '24h') periodMs = 24 * 60 * 60 * 1000
+
+        const max = nowAnchor.value
+        const min = max - periodMs
+
+        return {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: {
+                duration: 300
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    enabled: true,
+                    backgroundColor: 'rgba(15, 15, 26, 0.95)',
+                    titleColor: '#fff',
+                    bodyColor: '#fff',
+                    borderColor: 'rgba(255,255,255,0.1)',
+                    borderWidth: 1,
+                    padding: 12,
+                    displayColors: false,
+                    callbacks: {
+                        title: (items) => {
+                            if (items.length) {
+                                const date = new Date(items[0].raw.x)
+                                const h = date.getHours().toString().padStart(2, '0')
+                                const m = date.getMinutes().toString().padStart(2, '0')
+                                const s = date.getSeconds().toString().padStart(2, '0')
+
+                                if (period === '15m') return `${h}:${m}:${s}`
+                                if (period === '24h') {
+                                    const day = date.getDate().toString().padStart(2, '0')
+                                    const mon = (date.getMonth() + 1).toString().padStart(2, '0')
+                                    return `${day}/${mon} ${h}:${m}`
+                                }
+                                return `${h}:${m}`
+                            }
+                            return ''
+                        },
+                        label: (context) => {
+                            return formatPrice(context.raw.y)
+                        },
+                        afterLabel: (context) => {
+                            const firstPrice = props.history[0]?.price
+                            if (!firstPrice) return ''
+                            const diff = context.raw.y - firstPrice
+                            const percent = ((diff / firstPrice) * 100).toFixed(2)
+                            const sign = diff >= 0 ? '+' : ''
+                            return `${sign}${percent}% from start`
                         }
-                        return ''
-                    },
-                    label: (context) => {
-                        return formatPrice(context.raw)
-                    },
-                    afterLabel: (context) => {
-                        const firstPrice = props.history[0]?.price
-                        if (!firstPrice) return ''
-                        const diff = context.raw - firstPrice
-                        const percent = ((diff / firstPrice) * 100).toFixed(2)
-                        const sign = diff >= 0 ? '+' : ''
-                        return `${sign}${percent}% from start`
                     }
                 }
-            }
-        },
-        scales: {
-            x: {
-                display: true,
-                grid: {
-                    display: false,
-                    drawBorder: false
+            },
+            scales: {
+                x: {
+                    type: 'linear',
+                    display: true,
+                    min: min,
+                    max: max,
+                    grid: {
+                        display: false,
+                        drawBorder: false
+                    },
+                    ticks: {
+                        color: 'rgba(255, 255, 255, 0.4)',
+                        font: { size: 9 },
+                        maxTicksLimit: 5,
+                        maxRotation: 0,
+                        callback: (value) => {
+                            const date = new Date(value)
+                            const h = date.getHours().toString().padStart(2, '0')
+                            const m = date.getMinutes().toString().padStart(2, '0')
+                            if (period === '15m') {
+                                const s = date.getSeconds().toString().padStart(2, '0')
+                                return `${h}:${m}:${s}`
+                            }
+                            if (period === '24h') {
+                                const day = date.getDate().toString().padStart(2, '0')
+                                const mon = (date.getMonth() + 1).toString().padStart(2, '0')
+                                return `${day}/${mon} ${h}:${m}`
+                            }
+                            return `${h}:${m}`
+                        }
+                    }
                 },
-                ticks: {
-                    color: 'rgba(255, 255, 255, 0.4)',
-                    font: { size: 9 },
-                    maxTicksLimit: 5,
-                    maxRotation: 0
+                y: {
+                    display: true,
+                    position: 'right',
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.05)',
+                        drawBorder: false
+                    },
+                    ticks: {
+                        color: 'rgba(255, 255, 255, 0.4)',
+                        font: { size: 9 },
+                        maxTicksLimit: 4,
+                        callback: (value) => formatPrice(value)
+                    }
                 }
             },
-            y: {
-                display: true,
-                position: 'right',
-                grid: {
-                    color: 'rgba(255, 255, 255, 0.05)',
-                    drawBorder: false
-                },
-                ticks: {
-                    color: 'rgba(255, 255, 255, 0.4)',
-                    font: { size: 9 },
-                    maxTicksLimit: 4,
-                    callback: (value) => formatPrice(value)
-                }
+            interaction: {
+                mode: 'index',
+                intersect: false,
+                axis: 'x'
             }
-        },
-        interaction: {
-            mode: 'index',
-            intersect: false
         }
-    }))
+    })
+
+    const onUnmount = () => {
+        stopTicker()
+    }
 
     return {
         Line,
         chartData,
         chartOptions,
         priceStats,
-        formatPrice
+        formatPrice,
+        onUnmount
     }
 }

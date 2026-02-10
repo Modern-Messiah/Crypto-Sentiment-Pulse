@@ -19,7 +19,19 @@ export const useCryptoCard = (props) => {
             );
             const json = await res.json();
             if (json.history) {
-                history.value = json.history;
+                // Initial history might come from different sources/resolutions
+                // Strict sorting and de-duplication is critical
+                const uniqueHistory = [];
+                const seenTimes = new Set();
+                const sorted = [...json.history].sort((a, b) => a.time - b.time);
+
+                for (const item of sorted) {
+                    if (!seenTimes.has(item.time)) {
+                        uniqueHistory.push(item);
+                        seenTimes.add(item.time);
+                    }
+                }
+                history.value = uniqueHistory;
             }
         } catch (e) {
             console.error("Failed to fetch history", e);
@@ -40,16 +52,41 @@ export const useCryptoCard = (props) => {
         await fetchHistory();
     };
 
-    // Watch for price changes to update history if chart is visible and on 15m period
+    const lastUpdateTs = ref(0);
+
+    // Watch for price changes to update history if chart is visible
     watch(
         () => data.value.price,
         (newVal) => {
-            if (showChart.value && newVal && currentPeriod.value === "15m") {
+            if (showChart.value && newVal) {
+                const timestamp = data.value.timestamp || Date.now();
+
+                // Throttling: only push if at least 1 second has passed
+                if (timestamp - lastUpdateTs.value < 1000) return;
+                lastUpdateTs.value = timestamp;
+
                 history.value.push({
-                    time: Date.now(),
+                    time: timestamp,
                     price: newVal,
                 });
-                if (history.value.length > 100) history.value.shift();
+
+                // Keep unique and sorted to prevent "backwards" lines
+                const uniqueHistory = [];
+                const seenTimes = new Set();
+
+                // Sort by time and remove duplicates (caused by immediate re-fetch or drift)
+                const sorted = [...history.value].sort((a, b) => a.time - b.time);
+
+                for (const item of sorted) {
+                    if (!seenTimes.has(item.time)) {
+                        uniqueHistory.push(item);
+                        seenTimes.add(item.time);
+                    }
+                }
+
+                // Increase limit to 3000 points (~50 mins of 1s data)
+                // This keeps the 1h chart fully populated if left open
+                history.value = uniqueHistory.slice(-3000);
             }
         },
     );

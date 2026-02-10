@@ -13,6 +13,20 @@
     
     <div class="message-text">{{ message.text }}</div>
     
+    <!-- Media Indicator -->
+    <div v-if="message.has_media || (message.media && message.media.length > 0)" class="message-media-preview" @click="showMedia = true">
+      <div class="media-badge">
+        <template v-if="message.media && message.media.length > 1">
+          <span>📚 Album ({{ message.media.length }})</span>
+        </template>
+        <template v-else>
+          <span v-if="displayMediaType === 'photo'">🖼 Photo</span>
+          <span v-else-if="displayMediaType === 'video'">🎥 Video</span>
+          <span v-else-if="displayMediaType === 'gif'">🎬 GIF</span>
+        </template>
+      </div>
+    </div>
+    
     <div class="message-footer">
       <div class="message-stat">
         <span>👁</span>
@@ -24,11 +38,21 @@
       </div>
       <span v-if="message.is_demo" class="demo-badge">DEMO</span>
     </div>
+
+    <!-- Media Modal -->
+    <MediaModal 
+      :show="showMedia" 
+      :media-list="message.media || []"
+      :initial-media-url="message.media_url" 
+      :initial-media-type="message.media_type" 
+      @close="showMedia = false"
+    />
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
+import MediaModal from './MediaModal.vue'
 import '../styles/TelegramMessage.css'
 
 const props = defineProps({
@@ -41,6 +65,8 @@ const props = defineProps({
     default: false
   }
 })
+
+const showMedia = ref(false)
 
 const avatarLetter = computed(() => {
   return props.message.channel_title?.charAt(0)?.toUpperCase() || '?'
@@ -60,5 +86,12 @@ const formattedViews = computed(() => {
   if (views >= 1000000) return (views / 1000000).toFixed(1) + 'M'
   if (views >= 1000) return (views / 1000).toFixed(1) + 'K'
   return views.toString()
+})
+
+const displayMediaType = computed(() => {
+  if (props.message.media && props.message.media.length > 0) {
+    return props.message.media[0].type
+  }
+  return props.message.media_type
 })
 </script>

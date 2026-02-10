@@ -2,7 +2,6 @@ import asyncio
 import os
 from telethon import TelegramClient
 
-# Get credentials from env or input
 api_id = os.getenv("TELEGRAM_API_ID")
 api_hash = os.getenv("TELEGRAM_API_HASH")
 session_name = os.getenv("TELEGRAM_SESSION_NAME", "crypto_sentiment_bot")
@@ -15,8 +14,7 @@ if not api_id or not api_hash:
     api_hash = input("Enter API Hash: ").strip()
 
 async def auth():
-    # Ensure session directory exists
-    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) # This is 'app' dir
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     session_dir = os.path.join(base_dir, "data", "sessions")
     if not os.path.exists(session_dir):
         os.makedirs(session_dir, exist_ok=True)

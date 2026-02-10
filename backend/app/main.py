@@ -11,6 +11,8 @@ from app.services import binance as bs
 from app.services import telegram as tg
 from app.db.session import engine
 from app.db.base import Base
+from fastapi.staticfiles import StaticFiles
+import os
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -20,11 +22,9 @@ async def lifespan(app: FastAPI):
 
     Base.metadata.create_all(bind=engine)
     
-    # Start Binance stream
     await bs.init_binance_stream(settings.TRACKED_SYMBOLS)
     logger.info(f"Backend started. Tracking {len(settings.TRACKED_SYMBOLS)} symbols")
     
-    # Start Telegram service
     tg_service = await tg.init_telegram_service(
         api_id=settings.TELEGRAM_API_ID,
         api_hash=settings.TELEGRAM_API_HASH,
@@ -32,7 +32,6 @@ async def lifespan(app: FastAPI):
         channels=settings.TELEGRAM_CHANNELS
     )
     
-    # Set up real-time broadcast callback
     async def on_telegram_message(msg):
         logger.info(f"Broadcasting telegram_update to {len(manager.active_connections)} clients")
         await manager.broadcast({"type": "telegram_update", "data": msg})
@@ -63,6 +62,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Serve media files
+media_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "media")
+if not os.path.exists(media_path):
+    os.makedirs(media_path, exist_ok=True)
+    logger.info(f"Created media directory: {media_path}")
+
+app.mount("/media", StaticFiles(directory=media_path), name="media")
+
 @app.get("/")
 def root():
     """API info"""
@@ -83,15 +90,10 @@ async def websocket_endpoint(websocket: WebSocket):
         while True:
             data = {}
             
-            # Binance prices
             if bs.binance_stream:
                 prices = bs.binance_stream.get_prices()
                 if prices:
                     data["prices"] = prices
-            
-            # Telegram messages are now pushed via callback and loaded via REST API
-            # No need to send them every second in the main loop
-            
             if data:
                 await websocket.send_json({"type": "update", "data": data})
 

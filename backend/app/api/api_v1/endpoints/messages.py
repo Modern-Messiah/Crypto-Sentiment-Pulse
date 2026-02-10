@@ -11,6 +11,11 @@ from app.services import telegram as tg
 router = APIRouter()
 
 
+class MediaItem(BaseModel):
+    type: str
+    url: str
+
+
 class MessageResponse(BaseModel):
     id: int
     channel_username: str
@@ -20,6 +25,10 @@ class MessageResponse(BaseModel):
     forwards: int
     date: str
     is_demo: Optional[bool] = False
+    has_media: Optional[bool] = False
+    media_type: Optional[str] = None # Keeping for backward compatibility
+    media_url: Optional[str] = None  # Keeping for backward compatibility
+    media: List[MediaItem] = []
 
 
 @router.get("", response_model=List[MessageResponse])
@@ -37,19 +46,31 @@ def get_messages(
         .all()
     )
     
-    return [
-        MessageResponse(
-            id=msg.telegram_message_id, # Return Telegram ID to frontend
+    responses = []
+    for msg in db_messages:
+        media_items = []
+        for m in (msg.media or []):
+            media_items.append(MediaItem(
+                type=m.media_type,
+                url=f"/media/{m.media_path}"
+            ))
+            
+        responses.append(MessageResponse(
+            id=msg.telegram_message_id,
             channel_username=msg.channel.username if msg.channel else '',
             channel_title=msg.channel.title if msg.channel else '',
             text=msg.text or '',
             views=msg.views or 0,
             forwards=msg.forwards or 0,
             date=(msg.telegram_date.isoformat() if msg.telegram_date else msg.created_at.isoformat()) + "Z",
-            is_demo=False
-        )
-        for msg in db_messages
-    ]
+            is_demo=False,
+            has_media=bool(msg.has_media or media_items),
+            media_type=msg.media_type,
+            media_url=f"/media/{msg.media_path}" if msg.media_path else (media_items[0].url if media_items else None),
+            media=media_items
+        ))
+    
+    return responses
 
 
 @router.get("/status")

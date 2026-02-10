@@ -26,7 +26,6 @@ class ConnectionManager:
             except Exception:
                 disconnected.append(connection)
 
-        # Удаляем отключившихся
         for conn in disconnected:
             self.disconnect(conn)
 

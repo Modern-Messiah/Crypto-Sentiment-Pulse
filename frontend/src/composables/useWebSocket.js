@@ -71,12 +71,34 @@ export function useWebSocket(url) {
                     if (message.type === 'telegram_update' && message.data) {
                         const msg = message.data
 
+                        // Ensure media list and URLs are consistent
+                        if (!msg.media) msg.media = []
+
+                        // If has_media but no media items in list (push update during album build)
+                        if (msg.has_media && msg.media_path && msg.media.length === 0) {
+                            msg.media = [{
+                                type: msg.media_type,
+                                url: `/media/${msg.media_path}`
+                            }]
+                        }
+
+                        // Ensure media_url exists for fallback
+                        if (msg.media.length > 0 && !msg.media_url) {
+                            msg.media_url = msg.media[0].url
+                        } else if (msg.has_media && msg.media_path && !msg.media_url) {
+                            msg.media_url = `/media/${msg.media_path}`
+                        }
+
                         // Check if it's an edit or a new message
                         const index = telegramMessages.value.findIndex(m => m.id === msg.id && m.channel_username === msg.channel_username)
 
                         if (index !== -1) {
-                            // Replace message if it exists (edit)
-                            telegramMessages.value[index] = msg
+                            // Replace message if it exists (edit or update)
+                            // Only replace if certain fields are different to avoid unnecessary UI jitter
+                            const existing = telegramMessages.value[index]
+                            if (JSON.stringify(existing) !== JSON.stringify(msg)) {
+                                telegramMessages.value[index] = msg
+                            }
                         } else {
                             // Add new message at the top
                             telegramMessages.value = [msg, ...telegramMessages.value]
@@ -164,9 +186,9 @@ export function useWebSocket(url) {
             }
 
             if (newHistory.length > 0) {
-                // Append only if ID is not present
-                const currentIds = new Set(telegramMessages.value.map(m => m.id))
-                const uniqueNew = newHistory.filter(m => !currentIds.has(m.id))
+                // Append only if ID and channel combination is not present
+                const currentKeys = new Set(telegramMessages.value.map(m => `${m.channel_username}:${m.id}`))
+                const uniqueNew = newHistory.filter(m => !currentKeys.has(`${m.channel_username}:${m.id}`))
                 telegramMessages.value = [...telegramMessages.value, ...uniqueNew]
             }
         } catch (e) {

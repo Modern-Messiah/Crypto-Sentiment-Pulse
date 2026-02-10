@@ -19,6 +19,7 @@
       v-else-if="history.length > 0"
       :history="history"
       :color="chartColor"
+      :period="currentPeriod"
     />
     <div v-else class="chart-loader">
       No history data for {{ currentPeriod }}

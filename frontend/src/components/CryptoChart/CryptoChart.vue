@@ -5,6 +5,7 @@
 </template>
 
 <script setup>
+import { onBeforeUnmount } from 'vue'
 import { useCryptoChart } from './hooks/useCryptoChart.js'
 import './styles/CryptoChart.css'
 
@@ -16,8 +17,16 @@ const props = defineProps({
   color: {
     type: String,
     default: '#667eea'
+  },
+  period: {
+    type: String,
+    default: '15m'
   }
 })
 
-const { Line, chartData, chartOptions } = useCryptoChart(props)
+const { Line, chartData, chartOptions, onUnmount } = useCryptoChart(props)
+
+onBeforeUnmount(() => {
+  onUnmount()
+})
 </script>
