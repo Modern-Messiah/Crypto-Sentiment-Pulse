@@ -55,9 +55,39 @@
 
 .message-text {
     color: var(--text-secondary);
-    font-size: 0.9rem;
-    line-height: 1.5;
+    font-size: 0.9375rem;
+    line-height: 1.6;
     word-break: break-word;
+    white-space: pre-wrap;
+}
+
+.message-text a {
+    color: var(--accent-primary);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s ease;
+    border-bottom: 1px solid rgba(102, 126, 234, 0.2);
+}
+
+.message-text a:hover {
+    color: var(--accent-secondary);
+    border-bottom-color: var(--accent-secondary);
+}
+
+.message-text strong {
+    color: var(--text-primary);
+    font-weight: 700;
+}
+
+.hashtag {
+    color: var(--accent-primary);
+    font-weight: 500;
+}
+
+.message-text br {
+    display: block;
+    margin-bottom: 0.4rem;
+    content: "";
 }
 
 .message-footer {
