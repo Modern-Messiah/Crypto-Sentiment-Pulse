@@ -61,8 +61,20 @@ export const useCryptoCard = (props) => {
             if (showChart.value && newVal) {
                 const timestamp = data.value.timestamp || Date.now();
 
-                // Throttling: only push if at least 1 second has passed
-                if (timestamp - lastUpdateTs.value < 1000) return;
+                // Dynamic throttling based on period to match backend storage/aggregation
+                const THROTTLES = {
+                    "1m": 1000,     // 1s
+                    "5m": 5000,     // 5s
+                    "15m": 10000,   // 10s (standard resolution)
+                    "1h": 60000,    // 1m
+                    "4h": 300000,   // 5m
+                    "24h": 900000,  // 15m
+                };
+
+                const throttleMs = THROTTLES[currentPeriod.value] || 10000;
+
+                // Only push if enough time has passed based on current resolution
+                if (timestamp - lastUpdateTs.value < throttleMs) return;
                 lastUpdateTs.value = timestamp;
 
                 history.value.push({
@@ -74,7 +86,7 @@ export const useCryptoCard = (props) => {
                 const uniqueHistory = [];
                 const seenTimes = new Set();
 
-                // Sort by time and remove duplicates (caused by immediate re-fetch or drift)
+                // Sort by time and remove duplicates
                 const sorted = [...history.value].sort((a, b) => a.time - b.time);
 
                 for (const item of sorted) {
@@ -84,9 +96,11 @@ export const useCryptoCard = (props) => {
                     }
                 }
 
-                // Increase limit to 3000 points (~50 mins of 1s data)
-                // This keeps the 1h chart fully populated if left open
-                history.value = uniqueHistory.slice(-3000);
+                // Limit points to keep performance high
+                // For 24h at 15m intervals, we only need ~100 points.
+                // For 15m at 10s intervals, we need ~90 points.
+                // 1000 points is plenty for any view.
+                history.value = uniqueHistory.slice(-1000);
             }
         },
     );

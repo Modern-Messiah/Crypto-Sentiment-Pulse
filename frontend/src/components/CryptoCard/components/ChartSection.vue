@@ -2,7 +2,7 @@
   <div class="chart-wrapper animate-fade-in">
     <div class="chart-controls">
       <button
-        v-for="p in ['15m', '1h', '4h', '24h']"
+        v-for="p in ['1m', '5m', '15m', '1h', '4h', '24h']"
         :key="p"
         class="range-btn"
         :class="{ active: currentPeriod === p }"

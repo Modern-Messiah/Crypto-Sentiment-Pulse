@@ -61,14 +61,16 @@ export const useCryptoChart = (props) => {
     const nowAnchor = ref(Date.now())
     let tickerInterval = null
 
-    // Update 'now' every second to keep the chart scrolling smoothly
+    // Update 'now' periodically to keep the chart scrolling
     const startTicker = () => {
         stopTicker()
         tickerInterval = setInterval(() => {
             const latestTs = props.history.length > 0 ? Math.max(...props.history.map(h => h.time)) : 0
             const clientNow = Date.now()
+            // 1m chart needs 1s updates for "live" feel
+            // Others can use 5s to save CPU
             nowAnchor.value = Math.max(clientNow, latestTs)
-        }, 1000)
+        }, props.period === '1m' ? 1000 : 5000)
     }
 
     const stopTicker = () => {
@@ -80,6 +82,11 @@ export const useCryptoChart = (props) => {
             startTicker()
         }
     }, { immediate: true })
+
+    // If period changes, restart ticker with new interval
+    watch(() => props.period, () => {
+        startTicker()
+    })
 
     const chartData = computed(() => {
         return {
@@ -95,14 +102,24 @@ export const useCryptoChart = (props) => {
                     },
                     borderColor: props.color,
                     borderWidth: 2,
-                    pointRadius: 0,
+                    pointRadius: props.period === '1m' ? 2 : 0, // Show points for 1m
                     pointHoverRadius: 5,
                     pointHoverBackgroundColor: props.color,
                     pointHoverBorderColor: '#fff',
                     pointHoverBorderWidth: 2,
-                    data: props.history.map(h => ({ x: h.time, y: h.price })),
+                    data: computed(() => {
+                        const baseData = props.history.map(h => ({ x: h.time, y: h.price }));
+                        if (baseData.length > 0) {
+                            const lastPoint = baseData[baseData.length - 1];
+                            // If the last point is older than nowAnchor, add a virtual point to keep the line moving
+                            if (lastPoint.x < nowAnchor.value) {
+                                return [...baseData, { x: nowAnchor.value, y: lastPoint.y }];
+                            }
+                        }
+                        return baseData;
+                    }).value,
                     fill: true,
-                    tension: 0.3
+                    tension: props.period === '1m' ? 0.1 : 0.3 // Less tension for 1m to see fast moves
                 }
             ]
         }
@@ -111,7 +128,9 @@ export const useCryptoChart = (props) => {
     const chartOptions = computed(() => {
         const period = props.period || '15m'
         let periodMs = 15 * 60 * 1000
-        if (period === '1h') periodMs = 60 * 60 * 1000
+        if (period === '1m') periodMs = 60 * 1000
+        else if (period === '5m') periodMs = 5 * 60 * 1000
+        else if (period === '1h') periodMs = 60 * 60 * 1000
         else if (period === '4h') periodMs = 4 * 60 * 60 * 1000
         else if (period === '24h') periodMs = 24 * 60 * 60 * 1000
 
@@ -143,7 +162,7 @@ export const useCryptoChart = (props) => {
                                 const m = date.getMinutes().toString().padStart(2, '0')
                                 const s = date.getSeconds().toString().padStart(2, '0')
 
-                                if (period === '15m') return `${h}:${m}:${s}`
+                                if (period === '15m' || period === '1m' || period === '5m') return `${h}:${m}:${s}`
                                 if (period === '24h') {
                                     const day = date.getDate().toString().padStart(2, '0')
                                     const mon = (date.getMonth() + 1).toString().padStart(2, '0')
@@ -186,7 +205,7 @@ export const useCryptoChart = (props) => {
                             const date = new Date(value)
                             const h = date.getHours().toString().padStart(2, '0')
                             const m = date.getMinutes().toString().padStart(2, '0')
-                            if (period === '15m') {
+                            if (period === '15m' || period === '1m' || period === '5m') {
                                 const s = date.getSeconds().toString().padStart(2, '0')
                                 return `${h}:${m}:${s}`
                             }

@@ -14,18 +14,22 @@ async def get_history(symbol: str, period: str = "15m", limit: int = 1000, db: S
     symbol = symbol.upper().rstrip("/")
 
     now = datetime.utcnow()
-    if period == "1h":
+    if period == "1m":
+        start_time = now - timedelta(minutes=1)
+    elif period == "5m":
+        start_time = now - timedelta(minutes=5)
+    elif period == "1h":
         start_time = now - timedelta(hours=1)
-    elif period == "24h":
-        start_time = now - timedelta(days=1)
     elif period == "4h":
         start_time = now - timedelta(hours=4)
+    elif period == "24h":
+        start_time = now - timedelta(days=1)
     else:
         start_time = now - timedelta(minutes=15)
 
 
     # Use bucketing based on period to avoid returning thousands of points
-    # 15m -> no bucketing (10s resolution)
+    # 1m, 5m, 15m -> no bucketing (1-10s resolution)
     # 1h -> 1m buckets
     # 4h -> 5m buckets
     # 24h -> 15m buckets
