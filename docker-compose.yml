@@ -14,10 +14,13 @@ services:
       - TELEGRAM_API_ID=${TELEGRAM_API_ID:-}
       - TELEGRAM_API_HASH=${TELEGRAM_API_HASH:-}
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
     networks:
       - crypto-network
+    restart: on-failure
 
   celery-worker:
     build: ./backend
@@ -28,9 +31,12 @@ services:
       - REDIS_URL=redis://redis:6379/0
       - BACKEND_API_URL=http://backend:8080/api/v1/prices/
     depends_on:
-      - db
-      - redis
-      - backend
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      backend:
+        condition: service_started
     volumes:
       - ./backend:/app
     networks:
@@ -45,9 +51,12 @@ services:
       - REDIS_URL=redis://redis:6379/0
       - BACKEND_API_URL=http://backend:8080/api/v1/prices/
     depends_on:
-      - db
-      - redis
-      - backend
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      backend:
+        condition: service_started
     volumes:
       - ./backend:/app
     networks:
@@ -72,6 +81,11 @@ services:
       - POSTGRES_DB=cryptodb
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d cryptodb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     networks:
       - crypto-network
 
