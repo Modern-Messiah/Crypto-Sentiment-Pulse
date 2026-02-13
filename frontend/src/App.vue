@@ -45,6 +45,7 @@
       <!-- Prices Tab -->
       <div v-if="activeTab === 'prices'" class="dashboard-content animate-fade-in">
         <div v-if="hasData">
+
           <!-- Controls Toolbar -->
           <div class="toolbar glass-card">
             <div class="filter-group">
@@ -133,6 +134,7 @@ import CryptoCard from './components/CryptoCard/CryptoCard.vue'
 import CryptoTable from './components/CryptoTable/CryptoTable.vue'
 import TelegramFeed from './components/TelegramFeed/TelegramFeed.vue'
 import NewsFeed from './components/NewsFeed/NewsFeed.vue'
+import MarketSentiment from './components/MarketSentiment/MarketSentiment.vue'
 import { useApp } from './App.js'
 import './App.css'
 

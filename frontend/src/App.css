@@ -144,6 +144,14 @@
     }
 }
 
+/* Wrapper for sentiment widget */
+.sentiment-section {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+    width: 100%;
+}
+
 @media (max-width: 600px) {
     .main-content {
         padding: 1rem;

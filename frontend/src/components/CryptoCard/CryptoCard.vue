@@ -25,6 +25,20 @@
       :data="data"
       :format-price="formatPrice"
     />
+    
+    <!-- RSI / Momentum Indicator -->
+    <div class="rsi-container" v-if="data.rsi">
+      <div class="rsi-info">
+        <span class="rsi-label">RSI (14)</span>
+        <span class="rsi-value" :class="getRsiClass(data.rsi)">{{ data.rsi }}</span>
+      </div>
+      <div class="rsi-track">
+        <div 
+          class="rsi-bar" 
+          :style="{ width: `${data.rsi}%`, backgroundColor: getRsiColor(data.rsi) }"
+        ></div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -67,4 +81,16 @@ const {
   chartColor,
   formatPrice
 } = useCryptoCard(props);
+
+const getRsiColor = (rsi) => {
+  if (rsi >= 70) return '#ff4757'; // Overbought (Red/Sell risk)
+  if (rsi <= 30) return '#2ed573'; // Oversold (Green/Buy opp)
+  return '#eccc68'; // Neutral
+}
+
+const getRsiClass = (rsi) => {
+  if (rsi >= 70) return 'text-danger';
+  if (rsi <= 30) return 'text-success';
+  return 'text-warning';
+}
 </script>
