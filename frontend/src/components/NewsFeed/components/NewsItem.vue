@@ -60,7 +60,7 @@ const displaySource = computed(() => {
 
 const formattedTime = computed(() => {
   const date = new Date(props.item.published_at)
-  return date.toLocaleTimeString('ru-RU', { 
+  return date.toLocaleTimeString('en-US', { 
     hour: '2-digit', 
     minute: '2-digit'
   })
@@ -68,7 +68,7 @@ const formattedTime = computed(() => {
 
 const formattedDate = computed(() => {
   const date = new Date(props.item.published_at)
-  return date.toLocaleDateString('ru-RU', {
+  return date.toLocaleDateString('en-US', {
     day: 'numeric',
     month: 'short'
   })
