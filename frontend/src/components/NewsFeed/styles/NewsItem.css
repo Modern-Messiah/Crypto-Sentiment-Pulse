@@ -1,0 +1,125 @@
+.news-item {
+    padding: 1rem;
+    border-radius: var(--radius-md);
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: all var(--transition-normal);
+}
+
+.news-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.news-item.new {
+    animation: slideIn 0.3s ease-out;
+}
+
+.news-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+}
+
+.source-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.source-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #f39c12, #e74c3c);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.875rem;
+    color: white;
+    font-weight: 600;
+}
+
+.source-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.875rem;
+}
+
+.kind-badge {
+    font-size: 0.65rem;
+    padding: 0.15rem 0.4rem;
+    border-radius: var(--radius-xs);
+    background: rgba(102, 126, 234, 0.15);
+    color: var(--accent-primary);
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+.news-time {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.news-title {
+    color: var(--text-primary);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    line-height: 1.5;
+    margin-bottom: 0.5rem;
+    word-break: break-word;
+}
+
+.news-description {
+    color: var(--text-secondary);
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    word-break: break-word;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.news-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.read-more-link {
+    font-size: 0.8125rem;
+    color: var(--accent-primary);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.read-more-link:hover {
+    color: var(--accent-secondary);
+}
+
+.news-date {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

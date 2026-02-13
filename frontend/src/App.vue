@@ -32,6 +32,14 @@
           >
             Telegram
           </button>
+          
+          <button 
+            class="nav-tab" 
+            :class="{ active: activeTab === 'news' }"
+            @click="activeTab = 'news'"
+          >
+            News
+          </button>
       </div>
       
       <!-- Prices Tab -->
@@ -105,6 +113,16 @@
         />
       </div>
       
+      <!-- News Tab -->
+      <div v-else-if="activeTab === 'news'" class="dashboard-content animate-fade-in">
+        <NewsFeed 
+          :news-items="newsItems"
+          :is-loading-more="isLoadingMoreNews"
+          :all-loaded="allNewsLoaded"
+          @load-more="loadMoreNews"
+        />
+      </div>
+      
     </main>
   </div>
 </template>
@@ -114,6 +132,7 @@ import Header from './components/Header/Header.vue'
 import CryptoCard from './components/CryptoCard/CryptoCard.vue'
 import CryptoTable from './components/CryptoTable/CryptoTable.vue'
 import TelegramFeed from './components/TelegramFeed/TelegramFeed.vue'
+import NewsFeed from './components/NewsFeed/NewsFeed.vue'
 import { useApp } from './App.js'
 import './App.css'
 
@@ -132,7 +151,11 @@ const {
   telegramMessages,
   loadMoreMessages,
   isLoadingMore,
-  allLoaded
+  allLoaded,
+  newsItems,
+  loadMoreNews,
+  isLoadingMoreNews,
+  allNewsLoaded
 } = useApp()
 </script>
 

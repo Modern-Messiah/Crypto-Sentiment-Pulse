@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
 
+    from app.models.cryptopanic_news import CryptoPanicNews  # noqa: ensure table is created
     Base.metadata.create_all(bind=engine)
     
     await bs.init_binance_stream(settings.TRACKED_SYMBOLS)
@@ -39,6 +40,51 @@ async def lifespan(app: FastAPI):
     tg_service.set_message_callback(on_telegram_message)
     
     logger.info(f"Telegram service started. Monitoring {len(settings.TELEGRAM_CHANNELS)} channels")
+
+    # Initial CryptoPanic news fetch if DB is empty
+    from app.db.session import SessionLocal
+    from app.services import cryptopanic as cp
+    from datetime import datetime
+
+    db_check = SessionLocal()
+    try:
+        news_count = db_check.query(CryptoPanicNews).count()
+        if news_count == 0 and settings.CRYPTOPANIC_API_TOKEN:
+            logger.info("No CryptoPanic news in DB, fetching initial batch...")
+            news_list = await cp.fetch_news()
+            for item in news_list:
+                title = item.get("title", "").strip()
+                published_str = item.get("published_at")
+                if not title or not published_str:
+                    continue
+                try:
+                    published_at = datetime.fromisoformat(published_str.replace("Z", "+00:00"))
+                except (ValueError, TypeError):
+                    published_at = datetime.utcnow()
+
+                existing = db_check.query(CryptoPanicNews).filter(
+                    CryptoPanicNews.title == title,
+                    CryptoPanicNews.published_at == published_at
+                ).first()
+                if not existing:
+                    news = CryptoPanicNews(
+                        title=title,
+                        description=item.get("description"),
+                        published_at=published_at,
+                        kind=item.get("kind", "news"),
+                        source_title=item.get("source", {}).get("title") if isinstance(item.get("source"), dict) else None,
+                        url=item.get("url"),
+                    )
+                    db_check.add(news)
+            db_check.commit()
+            logger.info(f"Initial CryptoPanic news loaded: {len(news_list)} items")
+        else:
+            logger.info(f"CryptoPanic news in DB: {news_count} items, skipping initial fetch")
+    except Exception as e:
+        logger.error(f"Error during initial CryptoPanic fetch: {e}")
+        db_check.rollback()
+    finally:
+        db_check.close()
 
     yield
 
