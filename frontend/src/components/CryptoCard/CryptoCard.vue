@@ -27,7 +27,7 @@
     />
     
     <!-- RSI / Momentum Indicator -->
-    <div class="rsi-container" v-if="data.rsi">
+    <div class="rsi-container" v-if="data.rsi !== undefined && data.rsi !== null">
       <div class="rsi-info">
         <span class="rsi-label">RSI (14)</span>
         <span class="rsi-value" :class="getRsiClass(data.rsi)">{{ data.rsi }}</span>
