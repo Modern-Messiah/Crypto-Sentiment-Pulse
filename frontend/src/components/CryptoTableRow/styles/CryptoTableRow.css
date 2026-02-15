@@ -44,6 +44,20 @@ tr:hover {
     }
 }
 
+.tvl-content {
+    display: flex;
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.tvl-change {
+    font-size: 0.75rem;
+    font-weight: 500;
+    transform: translateY(-4px);
+}
+
 .coin-cell {
     display: flex;
     align-items: baseline;

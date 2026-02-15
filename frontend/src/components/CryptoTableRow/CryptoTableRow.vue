@@ -14,6 +14,19 @@
         {{ formatChange(coin.change_24h) }}
       </span>
     </td>
+    <td class="text-right font-mono">
+      <span :class="getRsiClass(coin.rsi)">
+        {{ formatRsi(coin.rsi) }}
+      </span>
+    </td>
+    <td class="text-right font-mono mobile-hide">
+      <div class="tvl-content">
+        <span class="tvl-value">{{ formatTvl(coin.tvl) }}</span>
+        <span v-if="coin.tvl_change_1d" class="tvl-change" :class="getTvlChangeClass(coin.tvl_change_1d)">
+          {{ formatTvlChange(coin.tvl_change_1d) }}
+        </span>
+      </div>
+    </td>
     <td class="text-right mobile-hide text-muted">
       {{ formatVolume(coin.volume_24h) }}
     </td>
@@ -33,5 +46,9 @@ const props = defineProps({
 })
 
 const { coin } = toRefs(props)
-const { animationClass, getChangeClass, formatPrice, formatChange, formatVolume } = useCryptoTableRow(coin)
+const { 
+  animationClass, getChangeClass, formatPrice, formatChange, 
+  formatVolume, getRsiClass, formatRsi, formatTvl,
+  formatTvlChange, getTvlChangeClass
+} = useCryptoTableRow(coin)
 </script>

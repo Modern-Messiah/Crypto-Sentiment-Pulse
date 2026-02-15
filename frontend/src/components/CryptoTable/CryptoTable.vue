@@ -29,6 +29,14 @@
               24h Change
               <span class="sort-icon" :class="{ active: sortKey === 'change_24h' }">{{ sortOrder === 'asc' ? '↑' : '↓' }}</span>
             </th>
+            <th @click="sortBy('rsi')" class="sortable text-right">
+              RSI (14)
+              <span class="sort-icon" :class="{ active: sortKey === 'rsi' }">{{ sortOrder === 'asc' ? '↑' : '↓' }}</span>
+            </th>
+            <th @click="sortBy('tvl')" class="sortable text-right mobile-hide">
+              TVL
+              <span class="sort-icon" :class="{ active: sortKey === 'tvl' }">{{ sortOrder === 'asc' ? '↑' : '↓' }}</span>
+            </th>
             <th @click="sortBy('volume_24h')" class="sortable text-right mobile-hide">
               24h Volume
               <span class="sort-icon" :class="{ active: sortKey === 'volume_24h' }">{{ sortOrder === 'asc' ? '↑' : '↓' }}</span>

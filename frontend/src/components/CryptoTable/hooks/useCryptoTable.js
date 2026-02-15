@@ -21,12 +21,16 @@ export const useCryptoTable = (props) => {
     const sortedPrices = computed(() => {
         return [...filteredPrices.value].sort((a, b) => {
             let modifier = sortOrder.value === 'asc' ? 1 : -1
+            const key = sortKey.value
 
-            if (sortKey.value === 'symbol') {
+            if (key === 'symbol') {
                 return a.symbol.localeCompare(b.symbol) * modifier
             }
 
-            return (a[sortKey.value] - b[sortKey.value]) * modifier
+            const valA = a[key] ?? -Infinity
+            const valB = b[key] ?? -Infinity
+
+            return (valA - valB) * modifier
         })
     })
 
