@@ -67,6 +67,8 @@ const props = defineProps({
   },
 });
 
+const emit = defineEmits(['toggle-expand']);
+
 const {
   animationClass,
   showChart,
@@ -80,7 +82,7 @@ const {
   changeClass,
   chartColor,
   formatPrice
-} = useCryptoCard(props);
+} = useCryptoCard(props, emit);
 
 const getRsiColor = (rsi) => {
   if (rsi >= 70) return '#ff4757'; // Overbought (Red/Sell risk)

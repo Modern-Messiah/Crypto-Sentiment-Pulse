@@ -21,6 +21,25 @@ export const useApp = () => {
     const filterMode = ref('all')
     const activeTab = ref('prices') // 'prices' or 'telegram'
 
+    // Freezing logic
+    const expandedSymbols = ref(new Set())
+    const frozenSymbols = ref([])
+
+    const onToggleExpand = (symbol, isOpen) => {
+        if (isOpen) {
+            if (expandedSymbols.value.size === 0) {
+                // Capture current order when first card expands
+                frozenSymbols.value = displayPrices.value.map(c => c.symbol)
+            }
+            expandedSymbols.value.add(symbol)
+        } else {
+            expandedSymbols.value.delete(symbol)
+            if (expandedSymbols.value.size === 0) {
+                frozenSymbols.value = []
+            }
+        }
+    }
+
     const tabs = [
         { id: 'prices', label: '📊 Prices', icon: '📊' },
         { id: 'telegram', label: '📱 Telegram', icon: '📱' },
@@ -40,7 +59,15 @@ export const useApp = () => {
     const allPricesArray = computed(() => Object.values(prices.value))
 
     const displayPrices = computed(() => {
-        let data = allPricesArray.value
+        let data = [...allPricesArray.value]
+
+        // If we are frozen, return data in the frozen order
+        if (frozenSymbols.value.length > 0) {
+            const symbolMap = new Map(data.map(c => [c.symbol, c]))
+            return frozenSymbols.value
+                .map(s => symbolMap.get(s))
+                .filter(c => !!c) // Filter out any that might have been removed
+        }
 
         if (filterMode.value === 'gainers') {
             return data.filter(c => c.change_24h > 0).sort((a, b) => b.change_24h - a.change_24h)
@@ -125,7 +152,8 @@ export const useApp = () => {
         newsItems,
         loadMoreNews,
         isLoadingMoreNews,
-        allNewsLoaded
+        allNewsLoaded,
+        onToggleExpand
     }
 }
 

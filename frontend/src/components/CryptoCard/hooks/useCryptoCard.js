@@ -1,6 +1,6 @@
 import { computed, toRefs, ref, watch } from "vue";
 
-export const useCryptoCard = (props) => {
+export const useCryptoCard = (props, emit) => {
     const { data } = toRefs(props);
     const animationClass = ref("");
     const animationTimeout = ref(null);
@@ -42,6 +42,12 @@ export const useCryptoCard = (props) => {
 
     const toggleChart = async () => {
         showChart.value = !showChart.value;
+
+        // Notify parent about expansion to freeze/unfreeze sorting
+        if (typeof emit === 'function') {
+            emit('toggle-expand', props.symbol, showChart.value);
+        }
+
         if (showChart.value && history.value.length === 0) {
             await fetchHistory();
         }

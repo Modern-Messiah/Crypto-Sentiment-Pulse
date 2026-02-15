@@ -87,6 +87,7 @@
               :key="coin.symbol"
               :symbol="coin.symbol"
               :data="coin"
+              @toggle-expand="onToggleExpand"
             />
           </div>
           
@@ -157,7 +158,8 @@ const {
   newsItems,
   loadMoreNews,
   isLoadingMoreNews,
-  allNewsLoaded
+  allNewsLoaded,
+  onToggleExpand
 } = useApp()
 </script>
 
