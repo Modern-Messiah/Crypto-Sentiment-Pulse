@@ -4,6 +4,7 @@
       :symbol="symbol"
       :change-class="changeClass"
       :formatted-change="formattedChange"
+      :is-trending="data.is_trending"
     />
 
     <CardPrice 

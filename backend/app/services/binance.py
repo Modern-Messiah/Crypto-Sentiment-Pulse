@@ -13,6 +13,7 @@ class BinancePriceStream:
         self.prices = {}
         self.history = defaultdict(lambda: deque(maxlen=1000))
         self._last_minute_ts = defaultdict(int) # Track last minute timestamp for RSI candle closure
+        self.trending_symbols = set()
         self._running = False
         self._ws = None
         
@@ -139,6 +140,21 @@ class BinancePriceStream:
             except Exception as e:
                 logger.error(f"Extreme error in persistence loop: {e}")
 
+    async def _trending_update_loop(self):
+        from app.services.coingecko import get_trending_symbols
+        
+        logger.info("Starting CoinGecko trending update loop (15m)...")
+        while self._running:
+            try:
+                self.trending_symbols = await get_trending_symbols()
+                # Wait for 15 minutes before next update
+                await asyncio.sleep(15 * 60)
+            except asyncio.CancelledError:
+                break
+            except Exception as e:
+                logger.error(f"Error in trending update loop: {e}")
+                await asyncio.sleep(60)
+
     async def process_message(self, data: dict):
         try:
             if 'result' in data:
@@ -189,6 +205,15 @@ class BinancePriceStream:
                         else:
                             rsi = 50.0
 
+                    # Check trending status
+                    # Symbols from CoinGecko are usually base symbols like 'BTC', 'SOL'
+                    # symbol from Binance is e.g. 'BTCUSDT'
+                    is_trending = False
+                    for trending in self.trending_symbols:
+                        if trending in symbol:
+                            is_trending = True
+                            break
+
                     self.prices[symbol] = {
                         'symbol': symbol,
                         'price': price,
@@ -197,7 +222,8 @@ class BinancePriceStream:
                         'high_24h': float(data.get('h', 0)),
                         'low_24h': float(data.get('l', 0)),
                         'timestamp': timestamp,
-                        'rsi': rsi
+                        'rsi': rsi,
+                        'is_trending': is_trending
                     }
                     
         except Exception as e:
@@ -245,6 +271,8 @@ class BinancePriceStream:
         self._running = True
         
         asyncio.create_task(self._persistence_loop())
+        # Start trending loop
+        asyncio.create_task(self._trending_update_loop())
         
         url = "wss://stream.binance.com:9443/ws"
         logger.info(f"Connecting to Binance ({url})...")
