@@ -10,8 +10,8 @@
         </p>
       </div>
       <span 
-        class="news-status-badge" 
-        :class="{ loading: isLoadingMore }"
+        class="status-badge" 
+        :class="{ loading: isLoadingMore, live: newsItems.length > 0 }"
       >
         {{ newsItems.length > 0 ? `${newsItems.length} items` : 'Loading...' }}
       </span>

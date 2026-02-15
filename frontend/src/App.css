@@ -234,12 +234,59 @@
     }
 }
 
-/* Wrapper for sentiment widget */
-.sentiment-section {
+/* Shared Feed Styles */
+.feed-header {
     display: flex;
-    justify-content: center;
-    margin-bottom: 1.5rem;
-    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.title-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.feed-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.feed-disclaimer {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin: 0;
+    font-style: italic;
+}
+
+.status-badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    background: rgba(46, 213, 115, 0.15);
+    color: var(--success);
+    transition: all var(--transition-fast);
+}
+
+.status-badge.connected,
+.status-badge.live {
+    background: rgba(46, 213, 115, 0.15);
+    color: var(--success);
+}
+
+.status-badge.loading,
+.status-badge.demo {
+    background: rgba(255, 165, 2, 0.15);
+    color: #ffa502;
+}
+
+.status-badge.disconnected {
+    background: rgba(255, 71, 87, 0.15);
+    color: var(--danger);
 }
 
 @media (max-width: 600px) {

@@ -5,57 +5,63 @@ export const useHeaderVisibility = (toolbarSelector = '.toolbar') => {
     let lastScrollY = window.scrollY
     let ticking = false
 
-    const updateVisibility = () => {
-        const currentScrollY = window.scrollY
-        const toolbar = document.querySelector(toolbarSelector)
+    const updateVisibility = (scrollTarget = window) => {
+        const isWindow = scrollTarget === window || scrollTarget === document
+        const currentScrollY = isWindow ? window.scrollY : scrollTarget.scrollTop
 
-        // 1. Check for scroll direction
-        const scrollingDown = currentScrollY > lastScrollY
+        // Target selectors that should trigger header hide when reached
+        const selectors = ['.toolbar', '.table-header', '.nav-tabs', '.feed-header']
+        let reachedTarget = false
 
-        // 2. Check for toolbar collision/reach
-        let reachedToolbar = false
-        if (toolbar) {
-            const rect = toolbar.getBoundingClientRect()
-            // If toolbar top is near the top of the viewport (considering header height)
-            // Header height is roughly 80px
-            reachedToolbar = rect.top <= 80
+        for (const selector of selectors) {
+            const el = document.querySelector(selector)
+            if (el) {
+                const rect = el.getBoundingClientRect()
+                // If element top is near the top of the viewport (considering header height ~80px)
+                if (rect.top <= 85) {
+                    reachedTarget = true
+                    break
+                }
+            }
         }
+
+        const scrollingDown = currentScrollY > (scrollTarget._lastScrollY || 0)
 
         // Hide if:
         // - Scrolling down AND we are not at the very top
-        // - OR we reached/passed the toolbar
-        if ((scrollingDown && currentScrollY > 100) || reachedToolbar) {
+        // - OR we reached/passed any of our targets
+        if ((scrollingDown && (isWindow ? currentScrollY > 100 : currentScrollY > 20)) || reachedTarget) {
             isHidden.value = true
         } else {
-            // Show if:
-            // - Scrolling up
-            // - AND we haven't reached the toolbar (or we are moving away from it upwards)
-            // Actually, if we are scrolling up, we usually want to show it immediately
-            // unless we are still "inside" the toolbar area.
+            // Show if scrolling up
             if (!scrollingDown) {
                 isHidden.value = false
             }
         }
 
-        lastScrollY = currentScrollY
+        scrollTarget._lastScrollY = currentScrollY
+        if (isWindow) lastScrollY = currentScrollY
         ticking = false
     }
 
-    const onScroll = () => {
+    const onScroll = (event) => {
         if (!ticking) {
             window.requestAnimationFrame(() => {
-                updateVisibility()
+                // If it's an internal scroll, we might need a different logic
+                // But for header hide, we usually just care if ANY scroll happens down
+                updateVisibility(event.target)
             })
             ticking = true
         }
     }
 
     onMounted(() => {
-        window.addEventListener('scroll', onScroll, { passive: true })
+        // Use capture: true to catch scrolls from internal containers (bubbles don't work for scroll)
+        window.addEventListener('scroll', onScroll, { passive: true, capture: true })
     })
 
     onUnmounted(() => {
-        window.removeEventListener('scroll', onScroll)
+        window.removeEventListener('scroll', onScroll, { capture: true })
     })
 
     return {

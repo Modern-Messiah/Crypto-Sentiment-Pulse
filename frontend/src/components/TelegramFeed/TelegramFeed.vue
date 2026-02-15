@@ -1,13 +1,19 @@
 <template>
   <div class="telegram-feed">
     <div class="feed-header">
-      <h2 class="feed-title">
-        Telegram Feed
-      </h2>
+      <div class="title-group">
+        <h2 class="feed-title">
+          Telegram Feed
+        </h2>
+        <p class="feed-disclaimer">
+          Real-time updates. New messages appear instantly as they are received.
+        </p>
+      </div>
       <span 
         class="status-badge" 
         :class="{ 
           connected: isConnected && !isDemoMode, 
+          live: isConnected && !isDemoMode,
           demo: isDemoMode,
           disconnected: !isConnected 
         }"
