@@ -43,7 +43,7 @@ export const useApp = () => {
     const tabs = [
         { id: 'prices', label: '📊 Prices', icon: '📊' },
         { id: 'telegram', label: '📱 Telegram', icon: '📱' },
-        { id: 'news', label: '📰 News', icon: '📰' }
+        { id: 'news', label: '📰 CryptoPanic', icon: '📰' }
     ]
 
     const filters = [

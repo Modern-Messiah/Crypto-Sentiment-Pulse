@@ -20,6 +20,18 @@
     gap: 0.5rem;
 }
 
+.title-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.feed-disclaimer {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin: 0;
+    font-style: italic;
+}
+
 .news-status-badge {
     font-size: 0.75rem;
     padding: 0.25rem 0.5rem;

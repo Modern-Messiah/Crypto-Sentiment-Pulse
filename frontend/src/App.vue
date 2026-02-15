@@ -38,7 +38,7 @@
             :class="{ active: activeTab === 'news' }"
             @click="activeTab = 'news'"
           >
-            News
+            CryptoPanic
           </button>
       </div>
       

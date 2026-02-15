@@ -1,14 +1,19 @@
 <template>
   <div class="news-feed">
     <div class="feed-header">
-      <h2 class="feed-title">
-        News Feed
-      </h2>
+      <div class="title-group">
+        <h2 class="feed-title">
+          CryptoPanic News
+        </h2>
+        <p class="feed-disclaimer">
+          Updates every 6 hours (Free Tier). Showing news from yesterday.
+        </p>
+      </div>
       <span 
         class="news-status-badge" 
         :class="{ loading: isLoadingMore }"
       >
-        {{ newsItems.length > 0 ? `${newsItems.length} news` : 'Loading...' }}
+        {{ newsItems.length > 0 ? `${newsItems.length} items` : 'Loading...' }}
       </span>
     </div>
     
