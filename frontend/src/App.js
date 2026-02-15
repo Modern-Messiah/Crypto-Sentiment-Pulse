@@ -18,9 +18,22 @@ export const useApp = () => {
     } = useWebSocket(WS_URL)
 
     const viewMode = ref('grid')
+    const viewTransitionName = ref('slide-left')
     const filterMode = ref('all')
     const activeTab = ref('prices')
     const transitionName = ref('slide-left')
+
+    // Handle view mode transition direction
+    const setViewMode = (mode) => {
+        if (mode === viewMode.value) return
+
+        if (mode === 'table') {
+            viewTransitionName.value = 'slide-left'
+        } else {
+            viewTransitionName.value = 'slide-right'
+        }
+        viewMode.value = mode
+    }
 
     const tabs = [
         { id: 'prices', label: 'Prices' },
@@ -157,6 +170,8 @@ export const useApp = () => {
         hasData,
         hasTelegramData,
         viewMode,
+        setViewMode,
+        viewTransitionName,
         filterMode,
         activeTab,
         transitionName,

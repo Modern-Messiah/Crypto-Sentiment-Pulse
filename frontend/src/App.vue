@@ -57,7 +57,7 @@
                     <button 
                       class="control-btn icon-btn"
                       :class="{ active: viewMode === 'grid' }"
-                      @click="viewMode = 'grid'"
+                      @click="setViewMode('grid')"
                       title="Grid View"
                     >
                       ⊞
@@ -65,7 +65,7 @@
                     <button 
                       class="control-btn icon-btn"
                       :class="{ active: viewMode === 'table' }"
-                      @click="viewMode = 'table'"
+                      @click="setViewMode('table')"
                       title="Table View"
                     >
                       ☰
@@ -73,20 +73,27 @@
                   </div>
                 </div>
 
-                <!-- Grid View -->
-                <div v-if="viewMode === 'grid'" class="cards-grid">
-                  <CryptoCard 
-                    v-for="coin in displayPrices" 
-                    :key="coin.symbol"
-                    :symbol="coin.symbol"
-                    :data="coin"
-                    @toggle-expand="onToggleExpand"
-                  />
-                </div>
-                
-                <!-- Table View -->
-                <div v-else class="table-wrapper">
-                  <CryptoTable :prices="displayPricesArray" />
+                <!-- Prices View Content -->
+                <div class="view-container">
+                  <Transition :name="viewTransitionName">
+                    <div :key="viewMode" class="view-wrapper">
+                      <!-- Grid View -->
+                      <div v-if="viewMode === 'grid'" class="cards-grid">
+                        <CryptoCard 
+                          v-for="coin in displayPrices" 
+                          :key="coin.symbol"
+                          :symbol="coin.symbol"
+                          :data="coin"
+                          @toggle-expand="onToggleExpand"
+                        />
+                      </div>
+                      
+                      <!-- Table View -->
+                      <div v-else class="table-wrapper">
+                        <CryptoTable :prices="displayPricesArray" />
+                      </div>
+                    </div>
+                  </Transition>
                 </div>
               </div>
               
@@ -143,6 +150,8 @@ const {
   error,
   hasData,
   viewMode,
+  setViewMode,
+  viewTransitionName,
   filterMode,
   activeTab,
   transitionName,

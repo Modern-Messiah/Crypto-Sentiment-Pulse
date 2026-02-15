@@ -117,8 +117,8 @@
 }
 
 .view-indicator {
-    height: calc(100% - 0.5rem) !important;
-    box-shadow: 0 4px 10px rgba(102, 126, 234, 0.25) !important;
+    height: calc(100% - 0.6rem) !important;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3) !important;
 }
 
 .nav-tab,
@@ -183,7 +183,11 @@
 
 .icon-btn {
     font-size: 1.1rem;
-    padding: 0.4rem 0.6rem;
+    padding: 0.4rem 0.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
 }
 
 .cards-grid {
