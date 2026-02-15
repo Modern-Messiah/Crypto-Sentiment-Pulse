@@ -19,7 +19,27 @@ export const useApp = () => {
 
     const viewMode = ref('grid')
     const filterMode = ref('all')
-    const activeTab = ref('prices') // 'prices' or 'telegram'
+    const activeTab = ref('prices')
+    const transitionName = ref('slide-left')
+
+    const tabs = [
+        { id: 'prices', label: 'Prices' },
+        { id: 'telegram', label: 'Telegram' },
+        { id: 'news', label: 'CryptoPanic' }
+    ]
+
+    const setTab = (tabId) => {
+        const currentIndex = tabs.findIndex(t => t.id === activeTab.value)
+        const nextIndex = tabs.findIndex(t => t.id === tabId)
+
+        if (nextIndex > currentIndex) {
+            transitionName.value = 'slide-left'
+        } else {
+            transitionName.value = 'slide-right'
+        }
+
+        activeTab.value = tabId
+    }
 
     // Freezing logic
     const expandedSymbols = ref(new Set())
@@ -40,11 +60,6 @@ export const useApp = () => {
         }
     }
 
-    const tabs = [
-        { id: 'prices', label: '📊 Prices', icon: '📊' },
-        { id: 'telegram', label: '📱 Telegram', icon: '📱' },
-        { id: 'news', label: '📰 CryptoPanic', icon: '📰' }
-    ]
 
     const filters = [
         { id: 'all', label: 'All Assets' },
@@ -144,10 +159,10 @@ export const useApp = () => {
         viewMode,
         filterMode,
         activeTab,
+        transitionName,
+        setTab,
         tabs,
         filters,
-        displayPrices,
-        displayPricesArray,
         displayPrices,
         displayPricesArray,
         telegramMessages,
