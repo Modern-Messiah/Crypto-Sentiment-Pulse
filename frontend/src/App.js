@@ -58,6 +58,11 @@ export const useApp = () => {
     // Преобразуем объект в массив для удобной фильтрации
     const allPricesArray = computed(() => Object.values(prices.value))
 
+    const globalStats = computed(() => {
+        const first = allPricesArray.value[0]
+        return first?.global_stats || {}
+    })
+
     const displayPrices = computed(() => {
         let data = [...allPricesArray.value]
 
@@ -153,7 +158,8 @@ export const useApp = () => {
         loadMoreNews,
         isLoadingMoreNews,
         allNewsLoaded,
-        onToggleExpand
+        onToggleExpand,
+        globalStats
     }
 }
 

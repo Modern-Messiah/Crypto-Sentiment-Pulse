@@ -26,6 +26,12 @@
     align-items: center;
 }
 
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
 @media (max-width: 768px) {
     .header {
         padding: 1rem;

@@ -49,6 +49,46 @@
     }
 }
 
+/* TVL Display */
+.tvl-container {
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.tvl-info,
+.flow-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.75rem;
+}
+
+.flow-info {
+    margin-top: 0.25rem;
+}
+
+.tvl-label {
+    color: var(--text-muted);
+    cursor: help;
+}
+
+.tvl-values {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.tvl-value {
+    color: var(--text-primary);
+    font-weight: 700;
+}
+
+.tvl-change {
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
 /* RSI Indicator */
 .rsi-container {
     margin-top: 1rem;
@@ -62,6 +102,10 @@
     font-size: 0.75rem;
     margin-bottom: 0.25rem;
     color: var(--text-muted);
+}
+
+.rsi-label {
+    cursor: help;
 }
 
 .rsi-value {

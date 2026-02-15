@@ -3,6 +3,7 @@
     <Header 
       :is-connected="isConnected" 
       :last-update="lastUpdate"
+      :global-stats="globalStats"
     />
     
     <main class="main-content">
@@ -159,7 +160,8 @@ const {
   loadMoreNews,
   isLoadingMoreNews,
   allNewsLoaded,
-  onToggleExpand
+  onToggleExpand,
+  globalStats
 } = useApp()
 </script>
 

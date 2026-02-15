@@ -14,6 +14,9 @@ class BinancePriceStream:
         self.history = defaultdict(lambda: deque(maxlen=1000))
         self._last_minute_ts = defaultdict(int) # Track last minute timestamp for RSI candle closure
         self.trending_symbols = set()
+        self.tvl_data = {}
+        self.money_flows = {}
+        self.global_stats = {}
         self._running = False
         self._ws = None
         
@@ -155,7 +158,71 @@ class BinancePriceStream:
                 logger.error(f"Error in trending update loop: {e}")
                 await asyncio.sleep(60)
 
+    async def _defillama_update_loop(self):
+        from app.services.defillama import get_chains_tvl, get_stablecoin_flows, get_global_stats, get_protocols_tvl
+        
+        # Tracked chains for detailed TVL change calculation
+        detailed_chains = [
+            "Bitcoin", "Ethereum", "Solana", "Binance", "Arbitrum", "Optimism", 
+            "Polygon", "Avalanche", "Tron", "Cardano", "Polkadot", "Near",
+            "Ripple", "Stellar", "Cosmos", "Filecoin", "Litecoin", "Doge", "EthereumClassic"
+        ]
+        # Tracked protocols (for coins that are primary protocols)
+        tracked_protocols = ["lido", "uniswap-v3", "aave-v3", "stake.link-liquid"]
+        
+        logger.info("Starting DefiLlama update loop (5m)...")
+        while self._running:
+            try:
+                # Fetch chains TVL first
+                self.tvl_data = await get_chains_tvl(detailed_chains=detailed_chains)
+                
+                # Fetch protocols, money flows, and global stats
+                proto_data, self.money_flows, self.global_stats = await asyncio.gather(
+                    get_protocols_tvl(tracked_protocols),
+                    get_stablecoin_flows(),
+                    get_global_stats()
+                )
+                
+                # Merge protocol data into tvl_data using their slugs as keys
+                for slug, data in proto_data.items():
+                    logger.info(f"Merging protocol data into tvl_data: {slug}")
+                    self.tvl_data[slug] = data
+                
+                # Wait for 5 minutes before next update
+                await asyncio.sleep(5 * 60)
+            except asyncio.CancelledError:
+                break
+            except Exception as e:
+                logger.error(f"Error in DefiLlama update loop: {e}")
+                await asyncio.sleep(60)
+
     async def process_message(self, data: dict):
+        # Mapping for TVL (Chain name or Protocol slug from DefiLlama)
+        MAPPING = {
+            'BTCUSDT': 'Bitcoin',
+            'ETHUSDT': 'Ethereum',
+            'SOLUSDT': 'Solana',
+            'BNBUSDT': 'Binance',
+            'ARBUSDT': 'Arbitrum',
+            'OPUSDT': 'Optimism',
+            'POLUSDT': 'Polygon',
+            'AVAXUSDT': 'Avalanche',
+            'TRXUSDT': 'Tron',
+            'ADAUSDT': 'Cardano',
+            'DOTUSDT': 'Polkadot',
+            'NEARUSDT': 'Near',
+            'AAVEUSDT': 'aave-v3',
+            'UNIUSDT': 'uniswap-v3',
+            'LINKUSDT': 'stake.link-liquid',
+            'ATOMUSDT': 'Cosmos',
+            'FILUSDT': 'Filecoin',
+            'LTCUSDT': 'Litecoin',
+            'XLMUSDT': 'Stellar', 
+            'XRPUSDT': 'Ripple',
+            'DOGEUSDT': 'Doge',
+            'ETCUSDT': 'EthereumClassic'
+        }
+        
         try:
             if 'result' in data:
                 logger.info("Binance subscription confirmed")
@@ -174,8 +241,7 @@ class BinancePriceStream:
                         'price': price
                     })
                     
-                    # Manage RSI with 1-minute 'candles' logic
-                    # Resample history to 1-minute intervals for more meaningful RSI
+                    # Manage RSI... (rest of the logic remains)
                     history_prices = [p['price'] for p in self.history[symbol]]
                     history_times = [p['time'] for p in self.history[symbol]]
                     
@@ -185,18 +251,16 @@ class BinancePriceStream:
                         minute_closes = []
                         seen_minutes = set()
                         
-                        # Iterate backwards to get latest 1-minute closes
                         for t, p in zip(reversed(history_times), reversed(history_prices)):
                             minute_key = int(t / 60000)
                             if minute_key not in seen_minutes:
                                 minute_closes.append(p)
                                 seen_minutes.add(minute_key)
-                                if len(minute_closes) >= 15: # 14 periods + 1 for change calculation
+                                if len(minute_closes) >= 15:
                                     break
                         
                         minute_closes.reverse()
                         
-                        # If we don't have enough minute candles, fallback to tick-based sub-sampling
                         if len(minute_closes) < 15 and len(history_prices) > 20:
                             sample_prices = history_prices[::5]
                             rsi = self.calculate_rsi(sample_prices, period=14)
@@ -206,13 +270,16 @@ class BinancePriceStream:
                             rsi = 50.0
 
                     # Check trending status
-                    # Symbols from CoinGecko are usually base symbols like 'BTC', 'SOL'
-                    # symbol from Binance is e.g. 'BTCUSDT'
                     is_trending = False
                     for trending in self.trending_symbols:
                         if trending in symbol:
                             is_trending = True
                             break
+
+                    # Get TVL and Money Flow data if available
+                    tvl_key = MAPPING.get(symbol)
+                    tvl_info = self.tvl_data.get(tvl_key) if tvl_key else None
+                    flow_info = self.money_flows.get(tvl_key) if tvl_key else None
 
                     self.prices[symbol] = {
                         'symbol': symbol,
@@ -223,7 +290,11 @@ class BinancePriceStream:
                         'low_24h': float(data.get('l', 0)),
                         'timestamp': timestamp,
                         'rsi': rsi,
-                        'is_trending': is_trending
+                        'is_trending': is_trending,
+                        'tvl': tvl_info.get('tvl') if tvl_info else None,
+                        'tvl_change_1d': tvl_info.get('change_1d') if tvl_info else None,
+                        'money_flow_24h': flow_info.get('net_flow_1d') if flow_info else None,
+                        'global_stats': self.global_stats
                     }
                     
         except Exception as e:
@@ -273,6 +344,8 @@ class BinancePriceStream:
         asyncio.create_task(self._persistence_loop())
         # Start trending loop
         asyncio.create_task(self._trending_update_loop())
+        # Start DefiLlama loop
+        asyncio.create_task(self._defillama_update_loop())
         
         url = "wss://stream.binance.com:9443/ws"
         logger.info(f"Connecting to Binance ({url})...")

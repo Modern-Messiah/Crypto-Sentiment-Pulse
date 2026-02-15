@@ -3,7 +3,7 @@
     <div class="symbol-info">
       <div class="symbol-name-container">
         <h3>{{ symbol.replace("USDT", "") }}</h3>
-        <span v-if="isTrending" class="trending-badge" title="Trending on CoinGecko">В тренде</span>
+        <span v-if="isTrending" class="trending-badge" title="Trending on CoinGecko">TRENDING</span>
       </div>
       <span class="pair">/USDT</span>
     </div>
