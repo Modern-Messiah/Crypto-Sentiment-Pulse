@@ -23,7 +23,6 @@
     grid-template-areas: "view";
     overflow: hidden;
     width: 100%;
-    /* Add padding to allow space for hover effects (scale/translate) without clipping */
     padding: 10px 0;
     margin: -10px 0;
 }
@@ -34,7 +33,6 @@
     will-change: transform, opacity;
 }
 
-/* Slide Transitions - Carousel Style */
 .slide-left-enter-active,
 .slide-left-leave-active,
 .slide-right-enter-active,
@@ -42,7 +40,6 @@
     transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Entering from right, leaving to left */
 .slide-left-enter-from {
     opacity: 0;
     transform: translateX(100%);
@@ -53,7 +50,6 @@
     transform: translateX(-100%);
 }
 
-/* Entering from left, leaving to right */
 .slide-right-enter-from {
     opacity: 0;
     transform: translateX(-100%);
@@ -64,7 +60,6 @@
     transform: translateX(100%);
 }
 
-/* Navigation Tabs */
 .nav-tabs {
     position: relative;
     display: flex;
@@ -239,13 +234,6 @@
     animation: spin 1s linear infinite;
 }
 
-@keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
-}
-
-/* Shared Feed Styles */
 .feed-header {
     display: flex;
     align-items: center;
@@ -300,6 +288,28 @@
     color: var(--danger);
 }
 
+.list-move,
+.list-enter-active,
+.list-leave-active {
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.list-enter-from,
+.list-leave-to {
+    opacity: 0;
+    transform: translateY(30px);
+}
+
+.list-leave-active {
+    position: absolute;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
 @media (max-width: 600px) {
     .main-content {
         padding: 1rem 0.75rem;
@@ -329,21 +339,4 @@
     .view-group {
         display: none;
     }
-}
-
-/* List Transitions (Reordering) */
-.list-move,
-.list-enter-active,
-.list-leave-active {
-    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.list-enter-from,
-.list-leave-to {
-    opacity: 0;
-    transform: translateY(30px);
-}
-
-.list-leave-active {
-    position: absolute;
 }

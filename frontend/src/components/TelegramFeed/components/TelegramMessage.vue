@@ -13,7 +13,6 @@
     
     <div class="message-text" v-html="formattedText"></div>
     
-    <!-- Media Indicator -->
     <div v-if="message.has_media || (message.media && message.media.length > 0)" class="message-media-preview" @click="showMedia = true">
       <div class="media-badge">
         <template v-if="message.media && message.media.length > 1">
@@ -39,7 +38,6 @@
       <span v-if="message.is_demo" class="demo-badge">DEMO</span>
     </div>
 
-    <!-- Media Modal -->
     <MediaModal 
       :show="showMedia" 
       :media-list="message.media || []"
@@ -92,42 +90,25 @@ const formattedText = computed(() => {
   if (!props.message.text) return ''
   
   let text = props.message.text
-
-  // 1. Clean Telegram technical hashtag links: [#текст](tg://...) -> #текст
   text = text.replace(/\[([^\]]+)\]\(tg:\/\/search_hashtag[^\s)]*\)/g, '$1')
-
-  // 2. Clean junk: remove 3+ asterisks or dashes in a row (dividers)
   text = text.replace(/\*{3,}/g, '')
   text = text.replace(/-{3,}/g, '')
-
-  // 3. Escape HTML to prevent injection
   text = text
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
-  
-  // 4. Parse Markdown links: [text](url) - only for actual web links
   text = text.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, (match, linkText, url) => {
     return `<a href="${url}" target="_blank" rel="noopener noreferrer">${linkText}</a>`
   })
 
-  // 5. Linkify raw URLs (not already in tags)
   const urlRegex = /(?<![\]\(]|href=")(https?:\/\/[^\s<]+)(?![^<]*?<\/a>)/g
   text = text.replace(urlRegex, (url) => {
     return `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`
   })
-  
-  // 6. Bold: **text** -> <strong>text</strong>
+
   text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-  
-  // 7. Cleanup fragmented hashtags like "# " "крипто" -> "#крипто" 
-  // and handle remnants of removed brackets
   text = text.replace(/#\s+/g, '#')
-  
-  // 8. Highlight hashtags
   text = text.replace(/(^|\s)(#[\w\u0400-\u04FF]+)/g, '$1<span class="hashtag">$2</span>')
-  
-  // 9. Handle line breaks (normalize multiple breaks to max 2)
   text = text.replace(/\n{3,}/g, '\n\n')
   text = text.replace(/\n/g, '<br>')
   

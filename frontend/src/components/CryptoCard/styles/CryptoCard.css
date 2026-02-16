@@ -22,7 +22,6 @@
     transition: opacity 0.5s ease;
 }
 
-/* Updated Animation Logic */
 .price-up-trigger::after {
     background: radial-gradient(circle at center,
             var(--success-bg) 0%,
@@ -37,19 +36,6 @@
     animation: flash 0.8s ease-out forwards;
 }
 
-@keyframes flash {
-    0% {
-        opacity: 1;
-        transform: scale(0.8);
-    }
-
-    100% {
-        opacity: 0;
-        transform: scale(1.5);
-    }
-}
-
-/* TVL Display */
 .tvl-container {
     margin-top: 0.5rem;
     padding-top: 0.5rem;
@@ -89,7 +75,6 @@
     font-weight: 600;
 }
 
-/* RSI Indicator */
 .rsi-container {
     margin-top: 1rem;
     padding-top: 0.5rem;
@@ -136,4 +121,16 @@
 
 .text-warning {
     color: #eccc68;
+}
+
+@keyframes flash {
+    0% {
+        opacity: 1;
+        transform: scale(0.8);
+    }
+
+    100% {
+        opacity: 0;
+        transform: scale(1.5);
+    }
 }

@@ -24,7 +24,6 @@ ChartJS.register(
 )
 
 export const useCryptoChart = (props) => {
-    // Format price for display
     const formatPrice = (value) => {
         if (value >= 1000) {
             return '$' + value.toLocaleString('en-US', { maximumFractionDigits: 0 })
@@ -35,7 +34,6 @@ export const useCryptoChart = (props) => {
         }
     }
 
-    // Helper to convert hex to rgba
     const hexToRgba = (hex, alpha) => {
         const r = parseInt(hex.slice(1, 3), 16)
         const g = parseInt(hex.slice(3, 5), 16)
@@ -43,7 +41,6 @@ export const useCryptoChart = (props) => {
         return `rgba(${r}, ${g}, ${b}, ${alpha})`
     }
 
-    // Calculate price stats
     const priceStats = computed(() => {
         if (!props.history.length) return { min: 0, max: 0, change: 0, changePercent: 0 }
 
@@ -61,14 +58,11 @@ export const useCryptoChart = (props) => {
     const nowAnchor = ref(Date.now())
     let tickerInterval = null
 
-    // Update 'now' periodically to keep the chart scrolling
     const startTicker = () => {
         stopTicker()
         tickerInterval = setInterval(() => {
             const latestTs = props.history.length > 0 ? Math.max(...props.history.map(h => h.time)) : 0
             const clientNow = Date.now()
-            // 1m chart needs 1s updates for "live" feel
-            // Others can use 5s to save CPU
             nowAnchor.value = Math.max(clientNow, latestTs)
         }, props.period === '1m' ? 1000 : 5000)
     }
@@ -83,7 +77,6 @@ export const useCryptoChart = (props) => {
         }
     }, { immediate: true })
 
-    // If period changes, restart ticker with new interval
     watch(() => props.period, () => {
         startTicker()
     })
@@ -102,7 +95,7 @@ export const useCryptoChart = (props) => {
                     },
                     borderColor: props.color,
                     borderWidth: 2,
-                    pointRadius: props.period === '1m' ? 2 : 0, // Show points for 1m
+                    pointRadius: props.period === '1m' ? 2 : 0,
                     pointHoverRadius: 5,
                     pointHoverBackgroundColor: props.color,
                     pointHoverBorderColor: '#fff',
@@ -111,7 +104,6 @@ export const useCryptoChart = (props) => {
                         const baseData = props.history.map(h => ({ x: h.time, y: h.price }));
                         if (baseData.length > 0) {
                             const lastPoint = baseData[baseData.length - 1];
-                            // If the last point is older than nowAnchor, add a virtual point to keep the line moving
                             if (lastPoint.x < nowAnchor.value) {
                                 return [...baseData, { x: nowAnchor.value, y: lastPoint.y }];
                             }
@@ -119,7 +111,7 @@ export const useCryptoChart = (props) => {
                         return baseData;
                     }).value,
                     fill: true,
-                    tension: props.period === '1m' ? 0.1 : 0.3 // Less tension for 1m to see fast moves
+                    tension: props.period === '1m' ? 0.1 : 0.3
                 }
             ]
         }

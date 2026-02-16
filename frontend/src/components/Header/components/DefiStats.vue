@@ -65,7 +65,7 @@ const formatTVL = (value) => {
 
 @media (max-width: 600px) {
   .defi-stats {
-    display: none; /* Hide on small screens to save space */
+    display: none;
   }
 }
 </style>

@@ -136,7 +136,6 @@
     }
 }
 
-/* Mobile Adjustments */
 @media (max-width: 768px) {
     .close-btn {
         top: 20px;

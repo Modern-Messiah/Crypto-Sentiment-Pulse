@@ -1,49 +1,41 @@
-/* ===================================
-   🎨 Crypto Dashboard - Global Styles
-   =================================== */
-
 :root {
-  /* Colors */
   --bg-primary: #0f0f1a;
   --bg-secondary: #1a1a2e;
   --bg-card: rgba(255, 255, 255, 0.05);
   --bg-card-hover: rgba(255, 255, 255, 0.08);
-  
+
   --text-primary: #ffffff;
   --text-secondary: rgba(255, 255, 255, 0.7);
   --text-muted: rgba(255, 255, 255, 0.5);
-  
+
   --accent-primary: #667eea;
   --accent-secondary: #764ba2;
-  
+
   --success: #00d084;
   --success-bg: rgba(0, 208, 132, 0.15);
   --danger: #ff4757;
   --danger-bg: rgba(255, 71, 87, 0.15);
-  
-  /* Gradients */
+
   --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   --gradient-success: linear-gradient(135deg, #00d084 0%, #00c9a7 100%);
   --gradient-danger: linear-gradient(135deg, #ff4757 0%, #ff6b7a 100%);
-  
-  /* Shadows */
+
   --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.3);
   --shadow-glow: 0 0 30px rgba(102, 126, 234, 0.3);
-  
-  /* Spacing */
+
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
   --radius-xl: 24px;
-  
-  /* Transitions */
+
   --transition-fast: 0.15s ease;
   --transition-normal: 0.3s ease;
   --transition-slow: 0.5s ease;
 }
 
-/* Reset & Base */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
@@ -63,7 +55,6 @@ body {
   overflow-x: hidden;
 }
 
-/* Background Animation */
 body::before {
   content: '';
   position: fixed;
@@ -71,7 +62,7 @@ body::before {
   left: 0;
   right: 0;
   bottom: 0;
-  background: 
+  background:
     radial-gradient(ellipse at 20% 0%, rgba(102, 126, 234, 0.15) 0%, transparent 50%),
     radial-gradient(ellipse at 80% 100%, rgba(118, 75, 162, 0.15) 0%, transparent 50%);
   pointer-events: none;
@@ -82,13 +73,14 @@ body::before {
   min-height: 100vh;
 }
 
-/* Typography */
-h1, h2, h3, h4 {
+h1,
+h2,
+h3,
+h4 {
   font-weight: 600;
   letter-spacing: -0.02em;
 }
 
-/* Glassmorphism Card */
 .glass-card {
   background: var(--bg-card);
   backdrop-filter: blur(20px);
@@ -105,32 +97,6 @@ h1, h2, h3, h4 {
   transform: translateY(-2px);
 }
 
-/* Animations */
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes slideIn {
-  from { opacity: 0; transform: translateX(-20px); }
-  to { opacity: 1; transform: translateX(0); }
-}
-
-@keyframes priceUp {
-  0% { background-color: var(--success-bg); }
-  100% { background-color: transparent; }
-}
-
-@keyframes priceDown {
-  0% { background-color: var(--danger-bg); }
-  100% { background-color: transparent; }
-}
-
 .animate-fade-in {
   animation: fadeIn 0.5s ease forwards;
 }
@@ -139,7 +105,6 @@ h1, h2, h3, h4 {
   animation: pulse 2s ease-in-out infinite;
 }
 
-/* Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -158,14 +123,77 @@ h1, h2, h3, h4 {
   background: var(--accent-secondary);
 }
 
-/* Utility Classes */
-.text-success { color: var(--success) !important; }
-.text-danger { color: var(--danger) !important; }
-.text-muted { color: var(--text-muted) !important; }
+.text-success {
+  color: var(--success) !important;
+}
+
+.text-danger {
+  color: var(--danger) !important;
+}
+
+.text-muted {
+  color: var(--text-muted) !important;
+}
 
 .gradient-text {
   background: var(--gradient-primary);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes priceUp {
+  0% {
+    background-color: var(--success-bg);
+  }
+
+  100% {
+    background-color: transparent;
+  }
+}
+
+@keyframes priceDown {
+  0% {
+    background-color: var(--danger-bg);
+  }
+
+  100% {
+    background-color: transparent;
+  }
 }

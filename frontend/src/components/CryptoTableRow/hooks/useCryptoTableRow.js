@@ -4,7 +4,6 @@ export const useCryptoTableRow = (coin) => {
     const animationClass = ref('')
     const animationTimeout = ref(null)
 
-    // Watch for price changes to trigger animation
     watch(() => coin.value.price, (newVal, oldVal) => {
         if (!oldVal) return
 

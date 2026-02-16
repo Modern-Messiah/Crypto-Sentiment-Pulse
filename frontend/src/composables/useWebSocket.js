@@ -32,9 +32,7 @@ export function useWebSocket(url) {
                 try {
                     const message = JSON.parse(event.data)
 
-                    // Handle new unified format
                     if (message.type === 'update' && message.data) {
-                        // Handle prices
                         if (message.data.prices) {
                             const newPrices = message.data.prices
 
@@ -49,7 +47,6 @@ export function useWebSocket(url) {
                             prices.value = newPrices
                         }
 
-                        // Handle prices
                         if (message.data.prices) {
                             const newPrices = message.data.prices
 
@@ -67,14 +64,11 @@ export function useWebSocket(url) {
                         lastUpdate.value = new Date()
                     }
 
-                    // Handle instant telegram updates (push)
                     if (message.type === 'telegram_update' && message.data) {
                         const msg = message.data
 
-                        // Ensure media list and URLs are consistent
                         if (!msg.media) msg.media = []
 
-                        // If has_media but no media items in list (push update during album build)
                         if (msg.has_media && msg.media_path && msg.media.length === 0) {
                             msg.media = [{
                                 type: msg.media_type,
@@ -82,31 +76,25 @@ export function useWebSocket(url) {
                             }]
                         }
 
-                        // Ensure media_url exists for fallback
                         if (msg.media.length > 0 && !msg.media_url) {
                             msg.media_url = msg.media[0].url
                         } else if (msg.has_media && msg.media_path && !msg.media_url) {
                             msg.media_url = `/media/${msg.media_path}`
                         }
 
-                        // Check if it's an edit or a new message
                         const index = telegramMessages.value.findIndex(m => m.id === msg.id && m.channel_username === msg.channel_username)
 
                         if (index !== -1) {
-                            // Replace message if it exists (edit or update)
-                            // Only replace if certain fields are different to avoid unnecessary UI jitter
                             const existing = telegramMessages.value[index]
                             if (JSON.stringify(existing) !== JSON.stringify(msg)) {
                                 telegramMessages.value[index] = msg
                             }
                         } else {
-                            // Add new message at the top
                             telegramMessages.value = [msg, ...telegramMessages.value]
                         }
                         lastUpdate.value = new Date()
                     }
 
-                    // Legacy format support
                     if (message.type === 'prices' && message.data) {
                         const newPrices = message.data
 
@@ -161,7 +149,6 @@ export function useWebSocket(url) {
         }
     }
 
-    // Pagination logic
     const isLoadingMore = ref(false)
     const allLoaded = ref(false)
 
@@ -173,7 +160,6 @@ export function useWebSocket(url) {
             const skip = telegramMessages.value.length
             const limit = 20
 
-            // Determine API URL based on environment
             const apiBase = import.meta.env.PROD ? '' : 'http://localhost:8080'
             const response = await fetch(`${apiBase}/api/v1/messages?limit=${limit}&skip=${skip}`)
 
@@ -186,7 +172,6 @@ export function useWebSocket(url) {
             }
 
             if (newHistory.length > 0) {
-                // Append only if ID and channel combination is not present
                 const currentKeys = new Set(telegramMessages.value.map(m => `${m.channel_username}:${m.id}`))
                 const uniqueNew = newHistory.filter(m => !currentKeys.has(`${m.channel_username}:${m.id}`))
                 telegramMessages.value = [...telegramMessages.value, ...uniqueNew]
@@ -200,7 +185,6 @@ export function useWebSocket(url) {
 
     onMounted(() => {
         connect()
-        // Initial load of messages
         loadMoreMessages()
     })
 

@@ -13,7 +13,6 @@ tr:hover {
     background: rgba(255, 255, 255, 0.02);
 }
 
-/* Row Flash Animations */
 .row-flash-green td {
     background: rgba(0, 208, 132, 0.1);
     animation: bgFlashGreen 0.8s ease-out;
@@ -22,26 +21,6 @@ tr:hover {
 .row-flash-red td {
     background: rgba(255, 71, 87, 0.1);
     animation: bgFlashRed 0.8s ease-out;
-}
-
-@keyframes bgFlashGreen {
-    0% {
-        background: rgba(0, 208, 132, 0.2);
-    }
-
-    100% {
-        background: transparent;
-    }
-}
-
-@keyframes bgFlashRed {
-    0% {
-        background: rgba(255, 71, 87, 0.2);
-    }
-
-    100% {
-        background: transparent;
-    }
 }
 
 .tvl-content {
@@ -99,6 +78,26 @@ tr:hover {
 
 .change-pill {
     font-weight: 500;
+}
+
+@keyframes bgFlashGreen {
+    0% {
+        background: rgba(0, 208, 132, 0.2);
+    }
+
+    100% {
+        background: transparent;
+    }
+}
+
+@keyframes bgFlashRed {
+    0% {
+        background: rgba(255, 71, 87, 0.2);
+    }
+
+    100% {
+        background: transparent;
+    }
 }
 
 @media (max-width: 600px) {

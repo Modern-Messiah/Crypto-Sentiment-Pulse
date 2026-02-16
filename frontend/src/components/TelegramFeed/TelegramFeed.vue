@@ -94,7 +94,6 @@ const handleScroll = () => {
   const el = scrollContainer.value
   if (!el) return
   
-  // Check if scrolled to bottom (with 50px threshold)
   if (el.scrollTop + el.clientHeight >= el.scrollHeight - 50) {
     if (!props.isLoadingMore && !props.allLoaded) {
       emit('load-more')

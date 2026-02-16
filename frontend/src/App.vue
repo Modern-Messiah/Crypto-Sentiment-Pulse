@@ -8,7 +8,6 @@
     
     <main class="main-content">
       
-      <!-- Ошибка соединения -->
       <div v-if="error" class="error-banner animate-fade-in">
         <div class="error-content">
           <span class="error-icon"></span>
@@ -16,7 +15,6 @@
         </div>
       </div>
       
-      <!-- Navigation Tabs -->
       <div class="nav-tabs glass-card" ref="navContainer">
           <div class="sliding-indicator" :style="navIndicatorStyle"></div>
           <button 
@@ -33,11 +31,8 @@
       <div class="view-container">
         <Transition :name="transitionName">
           <div :key="activeTab" class="view-wrapper">
-            <!-- Prices Tab -->
             <div v-if="activeTab === 'prices'" class="dashboard-content">
               <div v-if="hasData">
-
-                <!-- Controls Toolbar -->
                 <div class="toolbar glass-card">
                   <div class="filter-group" ref="filterContainer">
                     <div class="sliding-indicator filter-indicator" :style="filterIndicatorStyle"></div>
@@ -72,12 +67,9 @@
                     </button>
                   </div>
                 </div>
-
-                <!-- Prices View Content -->
                 <div class="view-container">
                   <Transition :name="viewTransitionName">
                     <div :key="viewMode" class="view-wrapper">
-                      <!-- Grid View -->
                       <TransitionGroup 
                         name="list" 
                         tag="div" 
@@ -97,7 +89,6 @@
                         </div>
                       </TransitionGroup>
                       
-                      <!-- Table View -->
                       <div v-else class="table-wrapper">
                         <CryptoTable :prices="displayPricesArray" />
                       </div>
@@ -106,14 +97,12 @@
                 </div>
               </div>
               
-              <!-- Лоадер при первой загрузке -->
               <div v-else class="loading-state">
                 <div class="spinner"></div>
                 <p>Connecting to live market data...</p>
               </div>
             </div>
             
-            <!-- Telegram Tab -->
             <div v-else-if="activeTab === 'telegram'" class="dashboard-content">
               <TelegramFeed 
                 :messages="telegramMessages"
@@ -124,7 +113,6 @@
               />
             </div>
             
-            <!-- News Tab -->
             <div v-else-if="activeTab === 'news'" class="dashboard-content">
               <NewsFeed 
                 :news-items="newsItems"

@@ -15,7 +15,6 @@ export function useSlidingIndicator(containerRef, activeValue) {
         await nextTick()
         if (!containerRef.value) return
 
-        // Find the active button within the container
         const activeButton = containerRef.value.querySelector('.active')
 
         if (activeButton) {
@@ -26,7 +25,6 @@ export function useSlidingIndicator(containerRef, activeValue) {
                 opacity: 1,
                 transition: isInitialized.value ? 'all 0.35s cubic-bezier(0.4, 0, 0.2, 1)' : 'none'
             }
-            // Allow transition only after the first successful positioning
             if (!isInitialized.value) {
                 setTimeout(() => {
                     isInitialized.value = true
@@ -37,12 +35,10 @@ export function useSlidingIndicator(containerRef, activeValue) {
         }
     }
 
-    // Watch for changes in active value
     watch(activeValue, () => {
         updateIndicator()
     })
 
-    // Watch for the container becoming available (e.g. after v-if changes)
     watch(containerRef, (newEl, oldEl) => {
         if (oldEl && resizeObserver) {
             resizeObserver.unobserve(oldEl)
@@ -56,12 +52,10 @@ export function useSlidingIndicator(containerRef, activeValue) {
     }, { immediate: true })
 
     onMounted(() => {
-        // Initialize ResizeObserver
         resizeObserver = new ResizeObserver(() => {
             updateIndicator()
         })
 
-        // If the element is already there, start observing
         if (containerRef.value) {
             updateIndicator()
             resizeObserver.observe(containerRef.value)

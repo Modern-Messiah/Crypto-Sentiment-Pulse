@@ -27,7 +27,6 @@
       :format-price="formatPrice"
     />
 
-    <!-- TVL Display -->
     <div v-if="data.tvl" class="tvl-container">
       <div class="tvl-info">
         <span class="tvl-label" title="Total Value Locked - the total amount of assets currently being held in this network or protocol.">TVL</span>
@@ -40,7 +39,7 @@
           </span>
         </div>
       </div>
-      <!-- Money Flow (Stablecoins) -->
+
       <div v-if="data.money_flow_24h" class="flow-info">
         <span class="tvl-label">Money Flow (24h)</span>
         <span class="tvl-value" :class="data.money_flow_24h >= 0 ? 'text-success' : 'text-danger'">
@@ -49,7 +48,6 @@
       </div>
     </div>
     
-    <!-- RSI / Momentum Indicator -->
     <div class="rsi-container" v-if="data.rsi !== undefined && data.rsi !== null">
       <div class="rsi-info">
         <span class="rsi-label" title="Relative Strength Index (14-period) - a momentum oscillator that measures the speed and change of price movements.">RSI (14)</span>
@@ -108,9 +106,9 @@ const {
 } = useCryptoCard(props, emit);
 
 const getRsiColor = (rsi) => {
-  if (rsi >= 70) return '#ff4757'; // Overbought (Red/Sell risk)
-  if (rsi <= 30) return '#2ed573'; // Oversold (Green/Buy opp)
-  return '#eccc68'; // Neutral
+  if (rsi >= 70) return '#ff4757';
+  if (rsi <= 30) return '#2ed573';
+  return '#eccc68';
 }
 
 const getRsiClass = (rsi) => {

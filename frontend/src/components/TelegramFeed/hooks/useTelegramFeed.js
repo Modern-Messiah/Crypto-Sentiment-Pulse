@@ -34,7 +34,7 @@ export function useTelegramFeed(wsUrl) {
             }
 
             ws.onerror = (e) => {
-                console.error('❌ Telegram WS error:', e)
+                console.error('Telegram WS error:', e)
                 error.value = 'Connection error'
             }
 

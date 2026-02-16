@@ -23,7 +23,6 @@ export const useApp = () => {
     const activeTab = ref('prices')
     const transitionName = ref('slide-left')
 
-    // Handle view mode transition direction
     const setViewMode = (mode) => {
         if (mode === viewMode.value) return
 
@@ -54,14 +53,12 @@ export const useApp = () => {
         activeTab.value = tabId
     }
 
-    // Freezing logic
     const expandedSymbols = ref(new Set())
     const frozenSymbols = ref([])
 
     const onToggleExpand = (symbol, isOpen) => {
         if (isOpen) {
             if (expandedSymbols.value.size === 0) {
-                // Capture current order when first card expands
                 frozenSymbols.value = displayPrices.value.map(c => c.symbol)
             }
             expandedSymbols.value.add(symbol)
@@ -83,7 +80,6 @@ export const useApp = () => {
     const hasData = computed(() => Object.keys(prices.value).length > 0)
     const hasTelegramData = computed(() => telegramMessages.value.length > 0)
 
-    // Преобразуем объект в массив для удобной фильтрации
     const allPricesArray = computed(() => Object.values(prices.value))
 
     const globalStats = computed(() => {
@@ -94,12 +90,11 @@ export const useApp = () => {
     const displayPrices = computed(() => {
         let data = [...allPricesArray.value]
 
-        // If we are frozen, return data in the frozen order
         if (frozenSymbols.value.length > 0) {
             const symbolMap = new Map(data.map(c => [c.symbol, c]))
             return frozenSymbols.value
                 .map(s => symbolMap.get(s))
-                .filter(c => !!c) // Filter out any that might have been removed
+                .filter(c => !!c)
         }
 
         if (filterMode.value === 'gainers') {
@@ -110,7 +105,6 @@ export const useApp = () => {
             return data.filter(c => c.change_24h < 0).sort((a, b) => a.change_24h - b.change_24h)
         }
 
-        // По умолчанию сортируем по объему или имени, чтобы порядок не скакал
         return data.sort((a, b) => b.change_24h - a.change_24h)
     })
 
@@ -122,7 +116,6 @@ export const useApp = () => {
         return obj
     })
 
-    // News state
     const newsItems = ref([])
     const isLoadingMoreNews = ref(false)
     const allNewsLoaded = ref(false)
@@ -158,7 +151,6 @@ export const useApp = () => {
         }
     }
 
-    // Load initial news on mount
     onMounted(() => {
         loadMoreNews()
     })
