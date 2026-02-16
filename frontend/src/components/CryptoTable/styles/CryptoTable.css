@@ -48,6 +48,15 @@
 
 .table-responsive {
     overflow-x: auto;
+    /* Hide scrollbar for Chrome, Safari and Opera */
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
+}
+
+.table-responsive::-webkit-scrollbar {
+    display: none;
 }
 
 table {
@@ -113,4 +122,33 @@ th:hover {
     th {
         padding: 0.75rem 0.5rem;
     }
+
+    th {
+        padding: 0.75rem 0.5rem;
+    }
+}
+
+/* Table Row Transitions */
+.table-row-move {
+    transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+    /* Smooth ease-out */
+}
+
+.table-row-enter-active {
+    transition: all 0.4s ease-out;
+}
+
+/* 
+   Crucial: Hide leaving items immediately. 
+   Animating 'leave' on table rows often causes layout collapse ("shrinking") 
+   or broken column widths. Instant removal followed by smooth entry of new items 
+   feels snappier and cleaner.
+*/
+.table-row-leave-active {
+    display: none;
+}
+
+.table-row-enter-from {
+    opacity: 0;
+    transform: translateY(20px);
 }

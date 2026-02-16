@@ -330,3 +330,20 @@
         display: none;
     }
 }
+
+/* List Transitions (Reordering) */
+.list-move,
+.list-enter-active,
+.list-leave-active {
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.list-enter-from,
+.list-leave-to {
+    opacity: 0;
+    transform: translateY(30px);
+}
+
+.list-leave-active {
+    position: absolute;
+}

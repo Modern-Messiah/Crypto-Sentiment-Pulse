@@ -43,18 +43,18 @@
             </th>
           </tr>
         </thead>
-        <tbody>
+        <TransitionGroup tag="tbody" name="table-row">
           <CryptoTableRow 
             v-for="coin in sortedPrices" 
             :key="coin.symbol" 
             :coin="coin"
           />
-          <tr v-if="sortedPrices.length === 0">
-            <td colspan="4" class="empty-state">
+          <tr v-if="sortedPrices.length === 0" key="empty-state">
+            <td colspan="6" class="empty-state">
               No coins found
             </td>
           </tr>
-        </tbody>
+        </TransitionGroup>
       </table>
     </div>
   </div>

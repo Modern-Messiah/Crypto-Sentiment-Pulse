@@ -78,15 +78,24 @@
                   <Transition :name="viewTransitionName">
                     <div :key="viewMode" class="view-wrapper">
                       <!-- Grid View -->
-                      <div v-if="viewMode === 'grid'" class="cards-grid">
-                        <CryptoCard 
+                      <TransitionGroup 
+                        name="list" 
+                        tag="div" 
+                        class="cards-grid"
+                        v-if="viewMode === 'grid'"
+                      >
+                        <div 
                           v-for="coin in displayPrices" 
                           :key="coin.symbol"
-                          :symbol="coin.symbol"
-                          :data="coin"
-                          @toggle-expand="onToggleExpand"
-                        />
-                      </div>
+                          class="card-wrapper"
+                        >
+                          <CryptoCard 
+                            :symbol="coin.symbol"
+                            :data="coin"
+                            @toggle-expand="onToggleExpand"
+                          />
+                        </div>
+                      </TransitionGroup>
                       
                       <!-- Table View -->
                       <div v-else class="table-wrapper">
