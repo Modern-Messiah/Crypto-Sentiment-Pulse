@@ -12,7 +12,6 @@
     transition: color 0.3s;
 }
 
-/* Text color feedback during update */
 .price-up-trigger .price {
     color: var(--success);
     text-shadow: 0 0 20px rgba(0, 208, 132, 0.3);

@@ -13,6 +13,8 @@
 </template>
 
 <script setup>
+import '../styles/DefiStats.css'
+
 defineProps({
   stats: {
     type: Object,
@@ -28,44 +30,4 @@ const formatTVL = (value) => {
 };
 </script>
 
-<style scoped>
-.defi-stats {
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-  padding: 0 0.5rem;
-  font-size: 0.8rem;
-}
 
-.stat-item {
-  display: flex;
-  align-items: baseline;
-  gap: 0.4rem;
-}
-
-.stat-label {
-  font-size: 0.65rem;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  white-space: nowrap;
-}
-
-.stat-value {
-  font-weight: 600;
-  color: var(--text-primary);
-  font-family: var(--font-mono, monospace);
-}
-
-.stat-divider {
-  width: 1px;
-  height: 12px;
-  background: rgba(255, 255, 255, 0.1);
-}
-
-@media (max-width: 600px) {
-  .defi-stats {
-    display: none;
-  }
-}
-</style>
