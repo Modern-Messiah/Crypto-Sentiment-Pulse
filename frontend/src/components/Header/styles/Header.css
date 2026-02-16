@@ -12,15 +12,15 @@
     transition: transform 0.4s ease, opacity 0.4s ease, margin-top 0.4s ease;
 }
 
-.fixed-layout .header.hidden {
-    margin-top: -70px;
-    /* Collapse space on mobile/fixed layout */
-}
-
 .header.hidden {
+    margin-top: -120px;
     transform: translateY(-100%);
     opacity: 0;
+    visibility: hidden;
     pointer-events: none;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    z-index: -1;
 }
 
 .header-content {

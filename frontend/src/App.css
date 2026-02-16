@@ -205,6 +205,7 @@
         padding: 1rem 0.75rem;
     }
 }
+
 @media (max-width: 600px) {
     .dashboard-content {
         gap: 0.75rem;
