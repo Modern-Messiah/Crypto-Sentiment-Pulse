@@ -30,7 +30,6 @@
 .view-wrapper {
     grid-area: view;
     width: 100%;
-    will-change: transform, opacity;
 }
 
 .slide-left-enter-active,
@@ -60,50 +59,6 @@
     transform: translateX(100%);
 }
 
-.nav-tabs {
-    position: relative;
-    display: flex;
-    justify-content: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    margin-bottom: 2rem;
-    background: rgba(255, 255, 255, 0.03);
-    border-radius: 100px !important;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    transition: all var(--transition-normal);
-    overflow: visible !important;
-}
-
-.nav-tabs:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
-    border-color: rgba(255, 255, 255, 0.1);
-}
-
-.nav-tab {
-    flex: 1;
-    max-width: 140px;
-    background: transparent;
-    border: 1px solid transparent;
-    color: var(--text-muted);
-    padding: 0.6rem 1rem;
-    border-radius: 100px;
-    cursor: pointer;
-    transition: all var(--transition-fast);
-    font-weight: 600;
-    font-size: 0.85rem;
-    white-space: nowrap;
-}
-
-.nav-tab:hover {
-    background: rgba(255, 255, 255, 0.05);
-    color: var(--text-primary);
-}
-
-.nav-tab.active {
-    color: white;
-}
-
 .sliding-indicator {
     position: absolute;
     background: var(--accent-primary);
@@ -121,84 +76,6 @@
     box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3) !important;
 }
 
-.nav-tab,
-.control-btn {
-    position: relative;
-    z-index: 1;
-}
-
-/* Toolbar */
-.toolbar {
-    display: flex;
-    justify-content: space-between;
-    padding: 0.6rem 1.25rem;
-    margin-bottom: 2.5rem;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-    background: rgba(255, 255, 255, 0.03);
-    border-radius: 100px !important;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    transition: all var(--transition-normal);
-    overflow: visible !important;
-}
-
-.toolbar:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
-    border-color: rgba(255, 255, 255, 0.1);
-}
-
-.filter-group,
-.view-group {
-    position: relative;
-    display: flex;
-    gap: 0.4rem;
-}
-
-.filter-indicator {
-    height: calc(100% - 0.2rem) !important;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3) !important;
-}
-
-.control-btn {
-    background: transparent;
-    border: 1px solid transparent;
-    color: var(--text-muted);
-    padding: 0.6rem 1rem;
-    border-radius: 100px;
-    cursor: pointer;
-    transition: all var(--transition-fast);
-    font-weight: 600;
-    font-size: 0.85rem;
-    white-space: nowrap;
-}
-
-.control-btn:hover {
-    background: rgba(255, 255, 255, 0.05);
-    color: var(--text-primary);
-}
-
-.control-btn.active {
-    color: white;
-}
-
-.icon-btn {
-    font-size: 1.1rem;
-    padding: 0.4rem 0.8rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 40px;
-}
-
-.cards-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 1.5rem;
-    padding-bottom: 2rem;
-}
-
 .error-banner {
     background: rgba(255, 71, 87, 0.1);
     border: 1px solid rgba(255, 71, 87, 0.3);
@@ -213,25 +90,6 @@
     gap: 1rem;
     color: var(--danger);
     font-weight: 500;
-}
-
-.loading-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 60vh;
-    gap: 1.5rem;
-    color: var(--text-muted);
-}
-
-.spinner {
-    width: 40px;
-    height: 40px;
-    border: 3px solid rgba(102, 126, 234, 0.3);
-    border-radius: 50%;
-    border-top-color: var(--accent-primary);
-    animation: spin 1s linear infinite;
 }
 
 .feed-header {
@@ -288,55 +146,8 @@
     color: var(--danger);
 }
 
-.list-move,
-.list-enter-active,
-.list-leave-active {
-    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.list-enter-from,
-.list-leave-to {
-    opacity: 0;
-    transform: translateY(30px);
-}
-
-.list-leave-active {
-    position: absolute;
-}
-
-@keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
-}
-
 @media (max-width: 600px) {
     .main-content {
         padding: 1rem 0.75rem;
-    }
-
-    .nav-tabs,
-    .toolbar {
-        padding: 0.5rem;
-        gap: 0.4rem;
-        margin-bottom: 1.25rem;
-    }
-
-    .nav-tab,
-    .control-btn {
-        padding: 0.5rem 0.75rem;
-        font-size: 0.8rem;
-        flex: 1;
-        min-width: 0;
-        text-align: center;
-    }
-
-    .filter-group {
-        width: 100%;
-        justify-content: space-between;
-    }
-
-    .view-group {
-        display: none;
     }
 }
