@@ -1,5 +1,5 @@
 <template>
-  <div class="telegram-feed">
+  <div class="telegram-feed" :class="{ 'header-hidden': isHeaderHidden }">
     <div class="feed-header">
       <div class="title-group">
         <h2 class="feed-title">
@@ -24,7 +24,7 @@
     
     <div 
       v-if="messages.length > 0" 
-      class="messages-list glass-card"
+      class="messages-list"
       ref="scrollContainer"
       @scroll="handleScroll"
     >
@@ -55,6 +55,7 @@
 <script setup>
 import { computed, ref, onMounted, onUnmounted } from 'vue'
 import TelegramMessage from './components/TelegramMessage.vue'
+import { useInternalHeaderVisibility } from '../../composables/useInternalHeaderVisibility'
 import './styles/TelegramFeed.css'
 
 const props = defineProps({
@@ -79,6 +80,7 @@ const props = defineProps({
 const emit = defineEmits(['load-more'])
 
 const scrollContainer = ref(null)
+const { isHeaderHidden, handleInternalScroll } = useInternalHeaderVisibility()
 
 const isDemoMode = computed(() => {
   return props.messages.some(m => m.is_demo)
@@ -90,7 +92,8 @@ const statusText = computed(() => {
   return 'Live'
 })
 
-const handleScroll = () => {
+const handleScroll = (event) => {
+  handleInternalScroll(event)
   const el = scrollContainer.value
   if (!el) return
   

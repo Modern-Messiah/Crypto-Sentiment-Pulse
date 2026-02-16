@@ -49,7 +49,14 @@
 
 @media (max-width: 768px) {
     .status {
-        width: 100%;
-        justify-content: center;
+        width: auto;
+        justify-content: flex-end;
+    }
+}
+
+@media (max-width: 600px) {
+    .status-indicator,
+    .last-update {
+        display: none;
     }
 }

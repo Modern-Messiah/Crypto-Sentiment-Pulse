@@ -1,9 +1,10 @@
 <template>
-  <div class="app-container">
+  <div class="app-container" :class="{ 'fixed-layout': activeTab === 'telegram' || activeTab === 'news' }">
     <Header 
       :is-connected="isConnected" 
       :last-update="lastUpdate"
       :global-stats="globalStats"
+      :active-tab="activeTab"
     />
     
     <main class="main-content">

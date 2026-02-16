@@ -16,6 +16,7 @@
 </template>
 
 <script setup>
+import { ref, toRef } from 'vue'
 import Logo from './components/Logo.vue'
 import StatusIndicator from './components/StatusIndicator.vue'
 import DefiStats from './components/DefiStats.vue'
@@ -23,9 +24,10 @@ import { useHeader } from './hooks/useHeader.js'
 import { useHeaderVisibility } from './hooks/useHeaderVisibility.js'
 import './styles/Header.css'
 
-defineProps({
+const props = defineProps({
   isConnected: Boolean,
   lastUpdate: [Date, null],
+  activeTab: String,
   globalStats: {
     type: Object,
     default: () => ({})
@@ -33,5 +35,5 @@ defineProps({
 })
 
 const { formatTime } = useHeader()
-const { isHidden } = useHeaderVisibility()
+const { isHidden } = useHeaderVisibility(null, toRef(() => props.activeTab))
 </script>

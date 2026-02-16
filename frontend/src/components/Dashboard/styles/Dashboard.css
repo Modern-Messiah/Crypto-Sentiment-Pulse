@@ -71,6 +71,10 @@
     padding-bottom: 2rem;
 }
 
+.table-wrapper {
+    padding-bottom: 1rem;
+}
+
 .loading-state {
     display: flex;
     flex-direction: column;

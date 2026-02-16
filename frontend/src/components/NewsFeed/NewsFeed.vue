@@ -1,5 +1,5 @@
 <template>
-  <div class="news-feed">
+  <div class="news-feed" :class="{ 'header-hidden': isHeaderHidden }">
     <div class="feed-header">
       <div class="title-group">
         <h2 class="feed-title">
@@ -19,7 +19,7 @@
     
     <div 
       v-if="newsItems.length > 0" 
-      class="news-list glass-card"
+      class="news-list"
       ref="scrollContainer"
       @scroll="handleScroll"
     >
@@ -50,6 +50,7 @@
 <script setup>
 import { ref } from 'vue'
 import NewsItem from './components/NewsItem.vue'
+import { useInternalHeaderVisibility } from '../../composables/useInternalHeaderVisibility'
 import './styles/NewsFeed.css'
 
 const props = defineProps({
@@ -70,8 +71,10 @@ const props = defineProps({
 const emit = defineEmits(['load-more'])
 
 const scrollContainer = ref(null)
+const { isHeaderHidden, handleInternalScroll } = useInternalHeaderVisibility()
 
-const handleScroll = () => {
+const handleScroll = (event) => {
+  handleInternalScroll(event)
   const el = scrollContainer.value
   if (!el) return
   

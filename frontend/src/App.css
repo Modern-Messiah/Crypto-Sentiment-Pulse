@@ -4,18 +4,35 @@
     flex-direction: column;
 }
 
+.app-container.fixed-layout {
+    height: 100vh;
+    overflow: hidden;
+}
+
 .main-content {
     flex: 1;
     max-width: 1400px;
     width: 100%;
     margin: 0 auto;
-    padding: 2rem;
+    padding: 1.5rem 2rem;
+}
+
+.fixed-layout .main-content {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
 .dashboard-content {
     display: flex;
     flex-direction: column;
-    gap: 2rem;
+    gap: 1.5rem;
+    transition: gap 0.3s ease-in-out;
+}
+
+.fixed-layout .dashboard-content {
+    height: 100%;
+    overflow: hidden;
 }
 
 .view-container {
@@ -27,9 +44,22 @@
     margin: -10px 0;
 }
 
+.fixed-layout .view-container {
+    flex: 1;
+    margin: 0;
+    padding: 0;
+}
+
 .view-wrapper {
     grid-area: view;
     width: 100%;
+}
+
+.fixed-layout .view-wrapper {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
 .slide-left-enter-active,
@@ -96,6 +126,30 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    padding: 0.75rem 0;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    transition: all 0.4s ease-in-out;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.telegram-feed.header-hidden .feed-header,
+.news-feed.header-hidden .feed-header {
+    margin-top: -85px;
+    /* Pull up to hide */
+    margin-bottom: -10px;
+    /* Pull content even higher */
+    opacity: 0;
+    pointer-events: none;
+}
+
+.telegram-feed.header-hidden,
+.news-feed.header-hidden {
+    gap: 0;
 }
 
 .title-group {
@@ -149,5 +203,10 @@
 @media (max-width: 600px) {
     .main-content {
         padding: 1rem 0.75rem;
+    }
+}
+@media (max-width: 600px) {
+    .dashboard-content {
+        gap: 0.75rem;
     }
 }
