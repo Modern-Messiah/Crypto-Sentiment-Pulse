@@ -27,7 +27,7 @@
 }
 
 .filter-indicator {
-    height: calc(100% - 0.2rem) !important;
+    height: calc(100% - 0.1rem) !important;
     box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3) !important;
 }
 
