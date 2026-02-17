@@ -38,19 +38,22 @@
       <div v-if="allLoaded && newsItems.length > 0" class="all-loaded">
         <span>No more news</span>
       </div>
+
     </div>
-    
+
     <div v-else class="empty-state glass-card">
       <div class="empty-icon">📰</div>
       <p>No news yet. Waiting for updates...</p>
     </div>
+
+    <ScrollToTop :target="scrollContainer" />
   </div>
 </template>
 
 <script setup>
 import { ref } from 'vue'
 import NewsItem from './components/NewsItem.vue'
-import { useInternalHeaderVisibility } from '../../composables/useInternalHeaderVisibility'
+import ScrollToTop from '../UI/ScrollToTop.vue'
 import './styles/NewsFeed.css'
 
 const props = defineProps({
@@ -65,16 +68,18 @@ const props = defineProps({
   allLoaded: {
     type: Boolean,
     default: false
+  },
+  isHeaderHidden: {
+    type: Boolean,
+    default: false
   }
 })
 
 const emit = defineEmits(['load-more'])
 
 const scrollContainer = ref(null)
-const { isHeaderHidden, handleInternalScroll } = useInternalHeaderVisibility()
 
 const handleScroll = (event) => {
-  handleInternalScroll(event)
   const el = scrollContainer.value
   if (!el) return
   

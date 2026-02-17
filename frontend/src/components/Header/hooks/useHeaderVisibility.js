@@ -6,7 +6,6 @@ export const useHeaderVisibility = (toolbarSelector = '.toolbar', activeTab = nu
     const THRESHOLD_DESKTOP = 1024
 
     const updateVisibility = (scrollTarget = window) => {
-
         const isWindow = scrollTarget === window || scrollTarget === document
         const currentScrollY = isWindow ? window.scrollY : scrollTarget.scrollTop
 
@@ -30,14 +29,14 @@ export const useHeaderVisibility = (toolbarSelector = '.toolbar', activeTab = nu
         const scrollDelta = Math.abs(currentScrollY - lastY)
 
         // UNIFIED LOGIC:
-        // 1. If we are at the very top (or bounced), always SHOW
-        if (currentScrollY <= 5) {
+        // 1. If we are at the very top (or close to it), always SHOW
+        if (currentScrollY <= 15) {
             isHidden.value = false
         }
-        // 2. We no longer show on scroll up (as per user request: only show at top)
+        // 2. We no longer show on scroll up (user preference)
         // 3. If we are scrolling DOWN and passed a threshold OR secondary nav reached top, HIDE
         else if (scrollingDown) {
-            if (reachedTarget || (isWindow ? currentScrollY > 100 : currentScrollY > 40)) {
+            if (reachedTarget || (isWindow ? currentScrollY > 100 : currentScrollY > 60)) {
                 isHidden.value = true
             }
         }
@@ -47,10 +46,8 @@ export const useHeaderVisibility = (toolbarSelector = '.toolbar', activeTab = nu
     }
 
     const onScroll = (event) => {
-
         const target = event.target
         const isWindow = target === window || target === document || target === document.documentElement
-
         const isFixedLayout = !!document.querySelector('.app-container.fixed-layout')
 
         if (isFixedLayout) {
@@ -76,10 +73,19 @@ export const useHeaderVisibility = (toolbarSelector = '.toolbar', activeTab = nu
     }
 
     if (activeTab) {
-        watch(activeTab, (newTab, oldTab) => {
-            if (newTab !== oldTab) {
-                isHidden.value = false
+        watch(activeTab, () => {
+            // Trigger check on next tick and again after small delay to be sure
+            const performCheck = () => {
+                const isFixedLayout = !!document.querySelector('.app-container.fixed-layout')
+                if (isFixedLayout) {
+                    const scrollContainer = document.querySelector('.messages-list') || document.querySelector('.news-list')
+                    updateVisibility(scrollContainer || window)
+                } else {
+                    updateVisibility(window)
+                }
             }
+            window.requestAnimationFrame(performCheck)
+            setTimeout(performCheck, 50)
         }, { immediate: true })
     }
 

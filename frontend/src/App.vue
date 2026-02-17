@@ -41,22 +41,24 @@
             />
             
             <div v-else-if="activeTab === 'telegram'" class="dashboard-content">
-              <TelegramFeed 
-                :messages="telegramMessages"
-                :is-connected="isConnected"
-                :is-loading-more="isLoadingMore"
-                :all-loaded="allLoaded"
-                @load-more="loadMoreMessages"
-              />
+                <TelegramFeed 
+                  :messages="telegramMessages"
+                  :is-connected="isConnected"
+                  :is-loading-more="isLoadingMore"
+                  :all-loaded="allLoaded"
+                  :is-header-hidden="isHeaderHidden"
+                  @load-more="loadMoreMessages"
+                />
             </div>
             
             <div v-else-if="activeTab === 'news'" class="dashboard-content">
-              <NewsFeed 
-                :news-items="newsItems"
-                :is-loading-more="isLoadingMoreNews"
-                :all-loaded="allNewsLoaded"
-                @load-more="loadMoreNews"
-              />
+                <NewsFeed 
+                  :news-items="newsItems"
+                  :is-loading-more="isLoadingMoreNews"
+                  :all-loaded="allNewsLoaded"
+                  :is-header-hidden="isHeaderHidden"
+                  @load-more="loadMoreNews"
+                />
             </div>
           </div>
         </Transition>

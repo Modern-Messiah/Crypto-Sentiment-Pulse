@@ -43,19 +43,22 @@
       <div v-if="allLoaded && messages.length > 0" class="all-loaded">
         <span>No more messages</span>
       </div>
+
     </div>
-    
+
     <div v-else class="empty-state glass-card">
       <div class="empty-icon"></div>
       <p>No messages yet. Waiting for updates...</p>
     </div>
+
+    <ScrollToTop :target="scrollContainer" />
   </div>
 </template>
 
 <script setup>
 import { computed, ref, onMounted, onUnmounted } from 'vue'
 import TelegramMessage from './components/TelegramMessage.vue'
-import { useInternalHeaderVisibility } from '../../composables/useInternalHeaderVisibility'
+import ScrollToTop from '../UI/ScrollToTop.vue'
 import './styles/TelegramFeed.css'
 
 const props = defineProps({
@@ -74,13 +77,16 @@ const props = defineProps({
   allLoaded: {
     type: Boolean,
     default: false
+  },
+  isHeaderHidden: {
+    type: Boolean,
+    default: false
   }
 })
 
 const emit = defineEmits(['load-more'])
 
 const scrollContainer = ref(null)
-const { isHeaderHidden, handleInternalScroll } = useInternalHeaderVisibility()
 
 const isDemoMode = computed(() => {
   return props.messages.some(m => m.is_demo)
@@ -93,7 +99,6 @@ const statusText = computed(() => {
 })
 
 const handleScroll = (event) => {
-  handleInternalScroll(event)
   const el = scrollContainer.value
   if (!el) return
   
