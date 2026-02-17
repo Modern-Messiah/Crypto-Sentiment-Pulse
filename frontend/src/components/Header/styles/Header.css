@@ -16,12 +16,22 @@
     margin-top: -75px;
     transform: translateY(-100%);
     opacity: 0;
-    visibility: hidden;
     pointer-events: none;
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-    z-index: -1;
 }
+
+/* Specific styles for Prices tab to avoid layout shifts */
+.header.fixed-prices {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+}
+
+.header.fixed-prices.hidden {
+    margin-top: 0;
+}
+
 
 .header-content {
     max-width: 1400px;

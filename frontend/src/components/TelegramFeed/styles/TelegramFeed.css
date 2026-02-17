@@ -25,7 +25,6 @@
 
 .messages-list::-webkit-scrollbar {
     width: 0px;
-    /* Hide scrollbar for cleaner look */
     background: transparent;
 }
 

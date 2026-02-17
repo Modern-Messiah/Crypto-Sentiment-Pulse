@@ -1,8 +1,7 @@
 .scroll-to-top-btn {
     position: absolute;
     top: 1.5rem;
-    left: 50%;
-    transform: translateX(-50%);
+    right: 1.5rem;
     width: 2.6rem;
     height: 2.6rem;
     border-radius: 50%;
@@ -22,7 +21,7 @@
 }
 
 .scroll-to-top-btn:hover {
-    transform: translateX(-50%) translateY(-2px) scale(1.08);
+    transform: translateY(-2px) scale(1.08);
     background: rgba(102, 126, 234, 0.25);
     border-color: var(--accent-primary);
     box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
@@ -58,11 +57,11 @@
     transform: translateY(-10px) scale(0.9);
 }
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
     .scroll-to-top-btn {
-        bottom: 1.5rem;
-        right: 1.5rem;
-        width: 3rem;
-        height: 3rem;
+        top: 1rem;
+        right: 1rem;
+        width: 2.8rem;
+        height: 2.8rem;
     }
 }

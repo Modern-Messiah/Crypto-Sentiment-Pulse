@@ -29,11 +29,14 @@ export const useHeaderVisibility = (toolbarSelector = '.toolbar', activeTab = nu
         const scrollDelta = Math.abs(currentScrollY - lastY)
 
         // UNIFIED LOGIC:
-        // 1. If we are at the very top (or close to it), always SHOW
-        if (currentScrollY <= 15) {
+        // 1. If we are close to the top, always SHOW (increased threshold for responsiveness)
+        if (currentScrollY <= 60) {
             isHidden.value = false
         }
-        // 2. We no longer show on scroll up (user preference)
+        // 2. Show immediately on scroll up if near the top (removes "perceived delay")
+        else if (!scrollingDown && currentScrollY < 150) {
+            isHidden.value = false
+        }
         // 3. If we are scrolling DOWN and passed a threshold OR secondary nav reached top, HIDE
         else if (scrollingDown) {
             if (reachedTarget || (isWindow ? currentScrollY > 100 : currentScrollY > 60)) {
@@ -73,19 +76,42 @@ export const useHeaderVisibility = (toolbarSelector = '.toolbar', activeTab = nu
     }
 
     if (activeTab) {
-        watch(activeTab, () => {
-            // Trigger check on next tick and again after small delay to be sure
-            const performCheck = () => {
-                const isFixedLayout = !!document.querySelector('.app-container.fixed-layout')
-                if (isFixedLayout) {
-                    const scrollContainer = document.querySelector('.messages-list') || document.querySelector('.news-list')
-                    updateVisibility(scrollContainer || window)
-                } else {
-                    updateVisibility(window)
+        watch(activeTab, (newTab) => {
+            // Determine the correct scroll target for the new tab
+            const isFixedLayout = newTab === 'telegram' || newTab === 'news'
+
+            // Allow DOM to update before syncing scroll positions
+            window.requestAnimationFrame(() => {
+                const scrollContainer = isFixedLayout
+                    ? (document.querySelector('.messages-list') || document.querySelector('.news-list'))
+                    : window
+
+                if (scrollContainer) {
+                    const currentY = scrollContainer === window ? window.scrollY : scrollContainer.scrollTop
+                    // Sync lastY with currentY so next scroll doesn't trigger immediate hide
+                    scrollContainer._lastScrollY = currentY
                 }
-            }
-            window.requestAnimationFrame(performCheck)
-            setTimeout(performCheck, 50)
+
+                // FORCE SHOW only when switching to Prices tab
+                if (newTab === 'prices') {
+                    isHidden.value = false
+                } else {
+                    // For other tabs, run a normal check
+                    updateVisibility(scrollContainer || window)
+                }
+            })
+
+            // Double check after a small delay as content might still be loading/rendering
+            setTimeout(() => {
+                const scrollContainer = (newTab === 'telegram' || newTab === 'news')
+                    ? (document.querySelector('.messages-list') || document.querySelector('.news-list'))
+                    : window
+                if (scrollContainer) {
+                    const currentY = scrollContainer === window ? window.scrollY : scrollContainer.scrollTop
+                    scrollContainer._lastScrollY = currentY
+                }
+                if (newTab === 'prices') isHidden.value = false
+            }, 100)
         }, { immediate: true })
     }
 

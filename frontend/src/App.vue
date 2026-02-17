@@ -8,7 +8,7 @@
       :is-hidden="isHeaderHidden"
     />
     
-    <main class="main-content" :class="{ 'header-hidden': isHeaderHidden }">
+    <main class="main-content" :class="{ 'header-hidden': isHeaderHidden, 'prices-layout': activeTab === 'prices' }">
       
       <div v-if="error" class="error-banner animate-fade-in">
         <div class="error-content">
@@ -107,5 +107,5 @@ const {
   globalStats
 } = useApp()
 
-const { isHidden: isHeaderHidden } = useHeaderVisibility(null, toRef(() => activeTab))
+const { isHidden: isHeaderHidden } = useHeaderVisibility(null, activeTab)
 </script>
