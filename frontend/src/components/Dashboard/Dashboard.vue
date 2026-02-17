@@ -37,26 +37,31 @@
       </div>
 
       <div class="view-container">
-        <Transition :name="viewTransitionName">
+        <Transition :name="viewTransitionName" mode="out-in">
           <div :key="viewMode" class="view-wrapper">
-            <TransitionGroup 
-              name="list" 
-              tag="div" 
-              class="cards-grid"
-              v-if="viewMode === 'grid'"
-            >
-              <div 
-                v-for="coin in displayPrices" 
-                :key="coin.symbol"
-                class="card-wrapper"
-              >
-                <CryptoCard 
-                  :symbol="coin.symbol"
-                  :data="coin"
-                  @toggle-expand="(sym, isOpen) => $emit('toggle-expand', sym, isOpen)"
-                />
-              </div>
-            </TransitionGroup>
+            <template v-if="viewMode === 'grid'">
+              <Transition name="filter-fade" mode="out-in">
+                <TransitionGroup 
+                  :key="filterMode"
+                  name="list" 
+                  tag="div" 
+                  class="cards-grid"
+                >
+                  <div 
+                    v-for="(coin, index) in displayPrices" 
+                    :key="coin.symbol"
+                    class="card-wrapper"
+                    :style="{ '--i': index }"
+                  >
+                    <CryptoCard 
+                      :symbol="coin.symbol"
+                      :data="coin"
+                      @toggle-expand="(sym, isOpen) => $emit('toggle-expand', sym, isOpen)"
+                    />
+                  </div>
+                </TransitionGroup>
+              </Transition>
+            </template>
             
             <div v-else class="table-wrapper">
               <CryptoTable :prices="displayPricesArray" />
