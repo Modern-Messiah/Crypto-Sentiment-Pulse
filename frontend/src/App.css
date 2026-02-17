@@ -23,6 +23,11 @@
     overflow: hidden;
 }
 
+.main-content.header-hidden {
+    padding-top: 0.5rem;
+    transition: padding-top 0.4s ease;
+}
+
 .dashboard-content {
     display: flex;
     flex-direction: column;
@@ -42,6 +47,7 @@
     width: 100%;
     padding: 10px 0;
     margin: -10px 0;
+    line-height: 2;
 }
 
 .fixed-layout .view-container {
@@ -140,16 +146,16 @@
 .telegram-feed.header-hidden .feed-header,
 .news-feed.header-hidden .feed-header {
     margin-top: -85px;
-    /* Pull up to hide */
-    margin-bottom: -10px;
-    /* Pull content even higher */
+    /* Reverted to more aggressive pull-up to close the gap */
+    margin-bottom: 0;
     opacity: 0;
     pointer-events: none;
 }
 
 .telegram-feed.header-hidden,
 .news-feed.header-hidden {
-    gap: 0;
+    gap: 0.25rem;
+    /* Tighten the gap between hidden header and list */
 }
 
 .title-group {
@@ -209,5 +215,14 @@
 @media (max-width: 600px) {
     .dashboard-content {
         gap: 0.75rem;
+    }
+
+    .main-content.header-hidden {
+        padding-top: 1.25rem;
+        /* Push menu down on mobile when header is hidden */
+    }
+
+    .view-container {
+        line-height: 1.3;
     }
 }

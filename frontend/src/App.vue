@@ -5,9 +5,10 @@
       :last-update="lastUpdate"
       :global-stats="globalStats"
       :active-tab="activeTab"
+      :is-hidden="isHeaderHidden"
     />
     
-    <main class="main-content">
+    <main class="main-content" :class="{ 'header-hidden': isHeaderHidden }">
       
       <div v-if="error" class="error-banner animate-fade-in">
         <div class="error-content">
@@ -72,6 +73,8 @@ import Dashboard from './components/Dashboard/Dashboard.vue'
 import TelegramFeed from './components/TelegramFeed/TelegramFeed.vue'
 import NewsFeed from './components/NewsFeed/NewsFeed.vue'
 import { useApp } from './App.js'
+import { useHeaderVisibility } from './components/Header/hooks/useHeaderVisibility.js'
+import { toRef } from 'vue'
 import './App.css'
 
 const {
@@ -101,4 +104,6 @@ const {
   onToggleExpand,
   globalStats
 } = useApp()
+
+const { isHidden: isHeaderHidden } = useHeaderVisibility(null, toRef(() => activeTab))
 </script>
