@@ -15,7 +15,7 @@ async def get_history(symbol: str, period: str = "15m", limit: int = 1000, db: S
 
     now = datetime.utcnow()
     if period == "1m":
-        start_time = now - timedelta(minutes=1)
+        start_time = now - timedelta(seconds=90)
     elif period == "5m":
         start_time = now - timedelta(minutes=5)
     elif period == "1h":

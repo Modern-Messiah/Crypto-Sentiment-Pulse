@@ -6,11 +6,16 @@ export const useChartTicker = (props) => {
 
     const startTicker = () => {
         stopTicker()
-        tickerInterval = setInterval(() => {
+
+        // Immediate sync to avoid jitter/gaps when switching periods
+        const syncNow = () => {
             const latestTs = props.history.length > 0 ? Math.max(...props.history.map(h => h.time)) : 0
             const clientNow = Date.now()
             nowAnchor.value = Math.max(clientNow, latestTs)
-        }, props.period === '1m' ? 1000 : 5000)
+        }
+
+        syncNow()
+        tickerInterval = setInterval(syncNow, props.period === '1m' ? 1000 : 10000)
     }
 
     const stopTicker = () => {

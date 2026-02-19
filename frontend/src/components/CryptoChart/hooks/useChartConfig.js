@@ -24,8 +24,16 @@ export const useChartConfig = (props, nowAnchor) => {
                     data: computed(() => {
                         const baseData = props.history.map(h => ({ x: h.time, y: h.price }));
 
-                        // Sampling logic to keep chart smooth (max 100 points)
-                        const MAX_POINTS = 100;
+                        // Sampling logic to keep chart smooth
+                        const targetPoints = {
+                            "1m": 60,   // every 1s
+                            "5m": 30,   // every 10s
+                            "15m": 30,  // every 30s
+                            "1h": 30,   // every 2m
+                            "4h": 30,   // every 8m
+                            "24h": 48   // every 30m
+                        };
+                        const MAX_POINTS = targetPoints[props.period] || 30;
                         let processedData = baseData;
 
                         if (baseData.length > MAX_POINTS) {
@@ -34,13 +42,22 @@ export const useChartConfig = (props, nowAnchor) => {
                         }
 
                         if (processedData.length > 0) {
+                            // Fill left edge: ensure line starts from the visible window start
+                            const periodMs = { "1m": 60000, "5m": 300000, "15m": 900000, "1h": 3600000, "4h": 14400000, "24h": 86400000 };
+                            const windowStart = nowAnchor.value - (periodMs[props.period] || 900000);
+                            if (processedData[0].x > windowStart) {
+                                processedData = [{ x: windowStart, y: processedData[0].y }, ...processedData];
+                            }
+
+                            // Fill right edge: extend line to current time
                             const lastPoint = baseData[baseData.length - 1]; // Use original last point
                             if (lastPoint.x < nowAnchor.value) {
-                                return [...processedData, { x: nowAnchor.value, y: lastPoint.y }];
+                                processedData = [...processedData, { x: nowAnchor.value, y: lastPoint.y }];
                             }
                         }
                         return processedData;
                     }).value,
+                    spanGaps: true,
                     fill: true,
                     tension: props.period === '1m' ? 0.1 : 0.3
                 }
