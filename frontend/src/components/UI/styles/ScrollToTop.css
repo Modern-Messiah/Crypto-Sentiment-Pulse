@@ -32,11 +32,7 @@
 }
 
 .scroll-to-top-btn.is-fixed {
-    position: fixed !important;
-    top: 6.8rem;
-    right: 2rem;
-    bottom: auto;
-    background: rgba(102, 126, 234, 0.25);
+    display: none;
 }
 
 .arrow-up {
@@ -74,8 +70,11 @@
     }
 
     .scroll-to-top-btn.is-fixed {
+        display: flex;
+        position: fixed !important;
         top: 5.2rem;
         right: 1.5rem;
         bottom: auto;
+        background: rgba(102, 126, 234, 0.25);
     }
 }
