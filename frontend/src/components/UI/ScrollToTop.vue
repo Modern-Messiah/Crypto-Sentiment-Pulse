@@ -3,6 +3,7 @@
     <button 
       v-if="isVisible" 
       class="scroll-to-top-btn"
+      :class="{ 'is-fixed': isFixed }"
       @click="scrollToTop"
       aria-label="Scroll to top"
     >
@@ -19,6 +20,10 @@ const props = defineProps({
   target: {
     type: [Object, String],
     default: null // If null, scrolls window
+  },
+  isFixed: {
+    type: Boolean,
+    default: false
   }
 })
 

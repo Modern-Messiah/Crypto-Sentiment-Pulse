@@ -31,6 +31,14 @@
     transform: scale(0.95);
 }
 
+.scroll-to-top-btn.is-fixed {
+    position: fixed !important;
+    top: 6.8rem;
+    right: 2rem;
+    bottom: auto;
+    background: rgba(102, 126, 234, 0.25);
+}
+
 .arrow-up {
     font-size: 1.1rem;
     font-weight: bold;
@@ -63,5 +71,11 @@
         right: 1rem;
         width: 2.8rem;
         height: 2.8rem;
+    }
+
+    .scroll-to-top-btn.is-fixed {
+        top: 5.2rem;
+        right: 1.5rem;
+        bottom: auto;
     }
 }

@@ -37,7 +37,7 @@
       </div>
 
       <div class="view-container">
-        <Transition :name="viewTransitionName" mode="out-in">
+        <Transition :name="viewTransitionName">
           <div :key="viewMode" class="view-wrapper">
             <template v-if="viewMode === 'grid'">
               <Transition name="filter-fade" mode="out-in">
@@ -69,6 +69,7 @@
           </div>
         </Transition>
       </div>
+      <ScrollToTop :is-fixed="true" />
     </div>
     
     <div v-else class="loading-state">
@@ -82,6 +83,7 @@
 import { ref, toRef } from 'vue'
 import CryptoCard from '../CryptoCard/CryptoCard.vue'
 import CryptoTable from '../CryptoTable/CryptoTable.vue'
+import ScrollToTop from '../UI/ScrollToTop.vue'
 import { useSlidingIndicator } from '../../composables/useSlidingIndicator'
 import './styles/Dashboard.css'
 
