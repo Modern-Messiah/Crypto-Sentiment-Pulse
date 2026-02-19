@@ -65,11 +65,11 @@ export const useCryptoCard = (props, emit) => {
 
                 const THROTTLES = {
                     "1m": 1000,
-                    "5m": 5000,
-                    "15m": 10000,
-                    "1h": 60000,
-                    "4h": 300000,
-                    "24h": 900000,
+                    "5m": 15000,
+                    "15m": 30000,
+                    "1h": 120000,
+                    "4h": 600000,
+                    "24h": 1800000,
                 };
 
                 const throttleMs = THROTTLES[currentPeriod.value] || 10000;

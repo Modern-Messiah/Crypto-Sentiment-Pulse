@@ -23,13 +23,23 @@ export const useChartConfig = (props, nowAnchor) => {
                     pointHoverBorderWidth: 2,
                     data: computed(() => {
                         const baseData = props.history.map(h => ({ x: h.time, y: h.price }));
-                        if (baseData.length > 0) {
-                            const lastPoint = baseData[baseData.length - 1];
+
+                        // Sampling logic to keep chart smooth (max 100 points)
+                        const MAX_POINTS = 100;
+                        let processedData = baseData;
+
+                        if (baseData.length > MAX_POINTS) {
+                            const step = Math.ceil(baseData.length / MAX_POINTS);
+                            processedData = baseData.filter((_, i) => i % step === 0);
+                        }
+
+                        if (processedData.length > 0) {
+                            const lastPoint = baseData[baseData.length - 1]; // Use original last point
                             if (lastPoint.x < nowAnchor.value) {
-                                return [...baseData, { x: nowAnchor.value, y: lastPoint.y }];
+                                return [...processedData, { x: nowAnchor.value, y: lastPoint.y }];
                             }
                         }
-                        return baseData;
+                        return processedData;
                     }).value,
                     fill: true,
                     tension: props.period === '1m' ? 0.1 : 0.3
