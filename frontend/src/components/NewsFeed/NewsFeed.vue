@@ -13,7 +13,7 @@
         class="status-badge" 
         :class="{ loading: isLoadingMore, live: newsItems.length > 0 }"
       >
-        {{ newsItems.length > 0 ? `${newsItems.length} items` : 'Loading...' }}
+        {{ newsItems.length > 0 ? 'Live' : 'Loading...' }}
       </span>
     </div>
     
@@ -42,7 +42,6 @@
     </div>
 
     <div v-else class="empty-state glass-card">
-      <div class="empty-icon">📰</div>
       <p>No news yet. Waiting for updates...</p>
     </div>
 
