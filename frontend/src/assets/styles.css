@@ -63,8 +63,8 @@ body::before {
   right: 0;
   bottom: 0;
   background:
-    radial-gradient(ellipse at 20% 0%, rgba(102, 126, 234, 0.15) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 100%, rgba(118, 75, 162, 0.15) 0%, transparent 50%);
+    radial-gradient(ellipse at 20% 0%, rgba(102, 126, 234, 0.04) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 100%, rgba(118, 75, 162, 0.04) 0%, transparent 50%);
   pointer-events: none;
   z-index: -1;
 }
@@ -82,9 +82,7 @@ h4 {
 }
 
 .glass-card {
-  background: var(--bg-card);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: rgba(22, 22, 40, 0.85);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
@@ -92,7 +90,7 @@ h4 {
 }
 
 .glass-card:hover {
-  background: var(--bg-card-hover);
+  background: rgba(28, 28, 50, 0.9);
   border-color: rgba(255, 255, 255, 0.15);
   transform: translateY(-2px);
 }

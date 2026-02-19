@@ -149,7 +149,8 @@
     padding: 0.55rem 0;
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    transition: all 0.4s ease-in-out;
+    transition: all 0.4s ease-in-out,
+        backdrop-filter 0s ease 0s, -webkit-backdrop-filter 0s ease 0s;
     opacity: 1;
     transform: translateY(0);
 }
@@ -157,10 +158,11 @@
 .telegram-feed.header-hidden .feed-header,
 .news-feed.header-hidden .feed-header {
     margin-top: -85px;
-    /* Reverted to more aggressive pull-up to close the gap */
     margin-bottom: 0;
     opacity: 0;
     pointer-events: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
 }
 
 .telegram-feed.header-hidden,
