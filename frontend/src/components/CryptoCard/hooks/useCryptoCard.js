@@ -1,7 +1,7 @@
 import { computed, toRefs } from "vue";
 import { usePriceAnimation } from "./usePriceAnimation";
 import { usePriceHistory } from "./usePriceHistory";
-import { formatPrice, getChangeClass, getChartColor, formatChange } from "../utils/formatters";
+import { formatPrice, getBadgeChangeClass, getChartColor, formatChange } from "../utils/formatters";
 
 export const useCryptoCard = (props, emit) => {
     const { data, symbol } = toRefs(props);
@@ -21,7 +21,7 @@ export const useCryptoCard = (props, emit) => {
 
     const formattedPrice = computed(() => formatPrice(data.value.price));
     const formattedChange = computed(() => formatChange(data.value.change_24h));
-    const changeClass = computed(() => getChangeClass(data.value.change_24h));
+    const changeClass = computed(() => getBadgeChangeClass(data.value.change_24h));
     const chartColor = computed(() => getChartColor(data.value.change_24h));
 
     return {

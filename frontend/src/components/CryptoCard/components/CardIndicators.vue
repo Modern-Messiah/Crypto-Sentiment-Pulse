@@ -4,7 +4,7 @@
       <div class="tvl-info">
         <span class="tvl-label" title="Total Value Locked - the total amount of assets currently being held in this network or protocol.">TVL</span>
         <div class="tvl-values">
-          <span class="tvl-value">{{ formatTVL(data.tvl) }}</span>
+          <span class="tvl-value">{{ formatTvl(data.tvl) }}</span>
           <span v-if="data.tvl_change_1d !== undefined" 
                 class="tvl-change" 
                 :class="data.tvl_change_1d >= 0 ? 'text-success' : 'text-danger'">
@@ -37,7 +37,7 @@
 </template>
 
 <script setup>
-import { formatTVL, formatMoneyFlow, getRsiColor, getRsiClass } from '../utils/formatters'
+import { formatTvl, formatMoneyFlow, getRsiColor, getRsiClass } from '../utils/formatters'
 
 defineProps({
   data: {

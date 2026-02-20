@@ -2,47 +2,16 @@
   <div class="glass-card table-container">
     <div class="table-header">
       <h3>Market Overview</h3>
-      <div class="search-box">
-        <span class="search-icon">🔍</span>
-        <input 
-          type="text" 
-          v-model="searchQuery" 
-          placeholder="Search coin..." 
-          class="search-input"
-        >
-      </div>
+      <TableSearch v-model="searchQuery" />
     </div>
     
     <div class="table-responsive">
       <table>
-        <thead>
-          <tr>
-            <th @click="sortBy('symbol')" class="sortable">
-              Asset
-              <span class="sort-icon" :class="{ active: sortKey === 'symbol' }">{{ sortOrder === 'asc' ? '↑' : '↓' }}</span>
-            </th>
-            <th @click="sortBy('price')" class="sortable text-right">
-              Price
-              <span class="sort-icon" :class="{ active: sortKey === 'price' }">{{ sortOrder === 'asc' ? '↑' : '↓' }}</span>
-            </th>
-            <th @click="sortBy('change_24h')" class="sortable text-right">
-              24h Change
-              <span class="sort-icon" :class="{ active: sortKey === 'change_24h' }">{{ sortOrder === 'asc' ? '↑' : '↓' }}</span>
-            </th>
-            <th @click="sortBy('rsi')" class="sortable text-right">
-              RSI (14)
-              <span class="sort-icon" :class="{ active: sortKey === 'rsi' }">{{ sortOrder === 'asc' ? '↑' : '↓' }}</span>
-            </th>
-            <th @click="sortBy('tvl')" class="sortable text-right mobile-hide">
-              TVL
-              <span class="sort-icon" :class="{ active: sortKey === 'tvl' }">{{ sortOrder === 'asc' ? '↑' : '↓' }}</span>
-            </th>
-            <th @click="sortBy('volume_24h')" class="sortable text-right mobile-hide">
-              24h Volume
-              <span class="sort-icon" :class="{ active: sortKey === 'volume_24h' }">{{ sortOrder === 'asc' ? '↑' : '↓' }}</span>
-            </th>
-          </tr>
-        </thead>
+        <TableHeader 
+          :sort-key="sortKey" 
+          :sort-order="sortOrder" 
+          @sort="sortBy"
+        />
         <TransitionGroup tag="tbody" name="table-row">
           <CryptoTableRow 
             v-for="coin in sortedPrices" 
@@ -62,6 +31,8 @@
 
 <script setup>
 import { useCryptoTable } from './hooks/useCryptoTable.js'
+import TableHeader from './components/TableHeader.vue'
+import TableSearch from './components/TableSearch.vue'
 import CryptoTableRow from '../CryptoTableRow/CryptoTableRow.vue'
 import './styles/CryptoTable.css'
 

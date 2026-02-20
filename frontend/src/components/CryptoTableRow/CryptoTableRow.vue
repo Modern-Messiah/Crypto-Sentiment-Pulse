@@ -36,6 +36,11 @@
 <script setup>
 import { toRefs } from 'vue'
 import { useCryptoTableRow } from './hooks/useCryptoTableRow.js'
+import { 
+  formatPrice, formatChange, getChangeClass, 
+  formatVolume, getRsiClass, formatRsi, 
+  formatTvl, formatTvlChange, getTvlChangeClass 
+} from '@/utils/formatters'
 import './styles/CryptoTableRow.css'
 
 const props = defineProps({
@@ -46,9 +51,5 @@ const props = defineProps({
 })
 
 const { coin } = toRefs(props)
-const { 
-  animationClass, getChangeClass, formatPrice, formatChange, 
-  formatVolume, getRsiClass, formatRsi, formatTvl,
-  formatTvlChange, getTvlChangeClass
-} = useCryptoTableRow(coin)
+const { animationClass } = useCryptoTableRow(coin)
 </script>
