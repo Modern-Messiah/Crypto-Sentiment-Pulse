@@ -13,7 +13,7 @@ export const useHeaderVisibility = (toolbarSelector = '.toolbar', activeTab = nu
         const currentY = isWindow ? window.scrollY : scrollTarget.scrollTop
         const lastY = scrollTarget._lastScrollY || 0
 
-        const reachedTarget = checkReachedTarget(STICKY_SELECTORS)
+        const reachedTarget = checkReachedTarget(STICKY_SELECTORS, 110)
 
         const newState = calculateHeaderState({
             currentY,
