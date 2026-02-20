@@ -72,8 +72,8 @@
 
 <script setup>
 import Header from './components/Header/Header.vue'
-import Navigation from './components/Navigation/Navigation.vue'
-import Dashboard from './components/Dashboard/Dashboard.vue'
+import Navigation from './components/UI/Navigation/Navigation.vue'
+import Dashboard from './components/UI/Dashboard/Dashboard.vue'
 import TelegramFeed from './components/TelegramFeed/TelegramFeed.vue'
 import NewsFeed from './components/NewsFeed/NewsFeed.vue'
 import { useApp } from './App.js'

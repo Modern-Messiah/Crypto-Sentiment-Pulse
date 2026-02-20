@@ -52,7 +52,7 @@
 <script setup>
 import { ref } from 'vue'
 import NewsItem from './components/NewsItem.vue'
-import ScrollToTop from '../UI/ScrollToTop.vue'
+import ScrollToTop from '../UI/ScrollToTop/ScrollToTop.vue'
 import './styles/NewsFeed.css'
 
 const props = defineProps({

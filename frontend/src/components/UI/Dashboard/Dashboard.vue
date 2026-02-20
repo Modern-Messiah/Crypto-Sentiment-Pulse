@@ -2,38 +2,26 @@
   <div class="dashboard-content">
     <div v-if="hasData">
       <div class="toolbar glass-card">
-        <div class="filter-group" ref="filterContainer">
-          <div class="sliding-indicator filter-indicator" :style="filterIndicatorStyle"></div>
-          <button 
-            v-for="f in filters" 
-            :key="f.id"
-            class="control-btn"
-            :class="{ active: filterMode === f.id }"
-            @click="$emit('update:filterMode', f.id)"
-          >
-            {{ f.label }}
-          </button>
-        </div>
+        <SlidingToggle
+          :model-value="filterMode"
+          @update:model-value="$emit('update:filterMode', $event)"
+          :items="filters"
+          container-class="filter-group"
+          item-class="control-btn"
+          indicator-class="filter-indicator"
+        />
 
-        <div class="view-group" ref="viewContainer">
-          <div class="sliding-indicator view-indicator" :style="viewIndicatorStyle"></div>
-          <button 
-            class="control-btn icon-btn"
-            :class="{ active: viewMode === 'grid' }"
-            @click="$emit('set-view-mode', 'grid')"
-            title="Grid View"
-          >
-            ⊞
-          </button>
-          <button 
-            class="control-btn icon-btn"
-            :class="{ active: viewMode === 'table' }"
-            @click="$emit('set-view-mode', 'table')"
-            title="Table View"
-          >
-            ☰
-          </button>
-        </div>
+        <SlidingToggle
+          :model-value="viewMode"
+          @update:model-value="$emit('set-view-mode', $event)"
+          :items="[
+            { id: 'grid', label: '⊞', title: 'Grid View' },
+            { id: 'table', label: '☰', title: 'Table View' }
+          ]"
+          container-class="view-group"
+          item-class="control-btn icon-btn"
+          indicator-class="view-indicator"
+        />
       </div>
 
       <div class="view-container">
@@ -80,11 +68,10 @@
 </template>
 
 <script setup>
-import { ref, toRef } from 'vue'
-import CryptoCard from '../CryptoCard/CryptoCard.vue'
-import CryptoTable from '../CryptoTable/CryptoTable.vue'
-import ScrollToTop from '../UI/ScrollToTop.vue'
-import { useSlidingIndicator } from '../../composables/useSlidingIndicator'
+import CryptoCard from '../../CryptoCard/CryptoCard.vue'
+import CryptoTable from '../../CryptoTable/CryptoTable.vue'
+import ScrollToTop from '../ScrollToTop/ScrollToTop.vue'
+import SlidingToggle from '../SlidingToggle/SlidingToggle.vue'
 import './styles/Dashboard.css'
 
 const props = defineProps({
@@ -98,17 +85,4 @@ const props = defineProps({
 })
 
 defineEmits(['update:filterMode', 'set-view-mode', 'toggle-expand'])
-
-const filterContainer = ref(null)
-const viewContainer = ref(null)
-
-const { indicatorStyle: filterIndicatorStyle } = useSlidingIndicator(
-    filterContainer, 
-    toRef(() => props.filterMode)
-)
-
-const { indicatorStyle: viewIndicatorStyle } = useSlidingIndicator(
-    viewContainer, 
-    toRef(() => props.viewMode)
-)
 </script>

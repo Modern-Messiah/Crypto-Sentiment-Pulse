@@ -58,7 +58,7 @@
 <script setup>
 import { computed, ref, onMounted, onUnmounted } from 'vue'
 import TelegramMessage from './components/TelegramMessage.vue'
-import ScrollToTop from '../UI/ScrollToTop.vue'
+import ScrollToTop from '../UI/ScrollToTop/ScrollToTop.vue'
 import './styles/TelegramFeed.css'
 
 const props = defineProps({

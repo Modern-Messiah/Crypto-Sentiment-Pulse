@@ -19,7 +19,7 @@ import './styles/ScrollToTop.css'
 const props = defineProps({
   target: {
     type: [Object, String],
-    default: null // If null, scrolls window
+    default: null
   },
   isFixed: {
     type: Boolean,
@@ -28,11 +28,10 @@ const props = defineProps({
 })
 
 const isVisible = ref(false)
-const threshold = 150 // Lower threshold for testing
+const threshold = 150
 
 const getTargetEl = (target) => {
     if (!target) return window
-    // Handle Vue ref
     if (target.value !== undefined) return target.value
     if (typeof target === 'string') return document.querySelector(target)
     return target
@@ -65,7 +64,6 @@ const removeListener = (target) => {
     el.removeEventListener('scroll', handleScroll)
 }
 
-// Watch both the prop itself and its .value (if it's a ref)
 watch(() => props.target, (newTarget, oldTarget) => {
     removeListener(oldTarget)
     setupListener(newTarget)
