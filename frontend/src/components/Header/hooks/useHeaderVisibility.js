@@ -76,42 +76,41 @@ export const useHeaderVisibility = (toolbarSelector = '.toolbar', activeTab = nu
     }
 
     if (activeTab) {
-        watch(activeTab, (newTab) => {
-            // Determine the correct scroll target for the new tab
-            const isFixedLayout = newTab === 'telegram' || newTab === 'news'
+        watch(activeTab, (newTab, oldTab) => {
+            // When switching between telegram and news, preserve header state as-is
+            const feedTabs = ['telegram', 'news']
+            const isSwitchingBetweenFeeds = feedTabs.includes(newTab) && feedTabs.includes(oldTab)
 
-            // Allow DOM to update before syncing scroll positions
+            if (isSwitchingBetweenFeeds) {
+                // Just sync _lastScrollY on the new container so next scroll doesn't glitch
+                window.requestAnimationFrame(() => {
+                    const scrollContainer = newTab === 'telegram'
+                        ? document.querySelector('.messages-list')
+                        : document.querySelector('.news-list')
+                    if (scrollContainer) {
+                        scrollContainer._lastScrollY = scrollContainer.scrollTop
+                    }
+                })
+                return // keep isHidden as-is
+            }
+
+            // Switching to Prices — always show header
+            if (newTab === 'prices') {
+                isHidden.value = false
+                return
+            }
+
+            // Switching from Prices to a feed tab — run visibility check
             window.requestAnimationFrame(() => {
-                const scrollContainer = isFixedLayout
-                    ? (document.querySelector('.messages-list') || document.querySelector('.news-list'))
-                    : window
+                const scrollContainer = newTab === 'telegram'
+                    ? document.querySelector('.messages-list')
+                    : document.querySelector('.news-list')
 
                 if (scrollContainer) {
-                    const currentY = scrollContainer === window ? window.scrollY : scrollContainer.scrollTop
-                    // Sync lastY with currentY so next scroll doesn't trigger immediate hide
-                    scrollContainer._lastScrollY = currentY
-                }
-
-                // FORCE SHOW only when switching to Prices tab
-                if (newTab === 'prices') {
-                    isHidden.value = false
-                } else {
-                    // For other tabs, run a normal check
-                    updateVisibility(scrollContainer || window)
+                    scrollContainer._lastScrollY = scrollContainer.scrollTop
+                    updateVisibility(scrollContainer)
                 }
             })
-
-            // Double check after a small delay as content might still be loading/rendering
-            setTimeout(() => {
-                const scrollContainer = (newTab === 'telegram' || newTab === 'news')
-                    ? (document.querySelector('.messages-list') || document.querySelector('.news-list'))
-                    : window
-                if (scrollContainer) {
-                    const currentY = scrollContainer === window ? window.scrollY : scrollContainer.scrollTop
-                    scrollContainer._lastScrollY = currentY
-                }
-                if (newTab === 'prices') isHidden.value = false
-            }, 100)
         }, { immediate: true })
     }
 
