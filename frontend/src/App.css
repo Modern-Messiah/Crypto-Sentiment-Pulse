@@ -28,15 +28,6 @@
     transition: padding-top 0.4s ease;
 }
 
-/* Fixed layout for Prices tab */
-.prices-layout {
-    padding-top: 6.5rem !important;
-    /* Forces static padding */
-}
-
-.prices-layout.header-hidden {
-    padding-top: 6.5rem !important;
-}
 
 
 .dashboard-content {
@@ -82,7 +73,7 @@
 .slide-left-leave-active,
 .slide-right-enter-active,
 .slide-right-leave-active {
-    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .slide-left-enter-from {

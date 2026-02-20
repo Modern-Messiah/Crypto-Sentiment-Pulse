@@ -1,5 +1,5 @@
 <template>
-  <header class="header" :class="{ hidden: isHidden, 'fixed-prices': activeTab === 'prices' }">
+  <header class="header" :class="{ hidden: isHidden }">
     <div class="header-content">
       <div class="header-left">
         <Logo />

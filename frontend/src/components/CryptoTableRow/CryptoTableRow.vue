@@ -22,7 +22,7 @@
     <td class="text-right font-mono mobile-hide">
       <div class="tvl-content">
         <span class="tvl-value">{{ formatTvl(coin.tvl) }}</span>
-        <span v-if="coin.tvl_change_1d" class="tvl-change" :class="getTvlChangeClass(coin.tvl_change_1d)">
+        <span class="tvl-change" :class="getTvlChangeClass(coin.tvl_change_1d)">
           {{ formatTvlChange(coin.tvl_change_1d) }}
         </span>
       </div>

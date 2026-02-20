@@ -8,7 +8,7 @@
       :is-hidden="isHeaderHidden"
     />
     
-    <main class="main-content" :class="{ 'header-hidden': isHeaderHidden, 'prices-layout': activeTab === 'prices' }">
+    <main class="main-content" :class="{ 'header-hidden': isHeaderHidden }">
       
       <div v-if="error" class="error-banner animate-fade-in">
         <div class="error-content">
@@ -24,45 +24,46 @@
       />
       
       <div class="view-container">
-        <div v-if="activeTab === 'prices'" class="view-wrapper">
-          <Dashboard 
-            :has-data="hasData"
-            :filters="filters"
-            :filter-mode="filterMode"
-            :view-mode="viewMode"
-            :view-transition-name="viewTransitionName"
-            :display-prices="displayPrices"
-            :display-prices-array="displayPricesArray"
-            @update:filter-mode="filterMode = $event"
-            @set-view-mode="setViewMode"
-            @toggle-expand="onToggleExpand"
-          />
-        </div>
-
-        <div v-if="activeTab === 'telegram'" class="view-wrapper">
-          <div class="dashboard-content">
-              <TelegramFeed 
-                :messages="telegramMessages"
-                :is-connected="isConnected"
-                :is-loading-more="isLoadingMore"
-                :all-loaded="allLoaded"
-                :is-header-hidden="isHeaderHidden"
-                @load-more="loadMoreMessages"
+        <Transition :name="transitionName">
+          <KeepAlive>
+            <div :key="activeTab" class="view-wrapper">
+              <Dashboard 
+                v-if="activeTab === 'prices'"
+                :has-data="hasData"
+                :filters="filters"
+                :filter-mode="filterMode"
+                :view-mode="viewMode"
+                :view-transition-name="viewTransitionName"
+                :display-prices="displayPrices"
+                :display-prices-array="displayPricesArray"
+                @update:filter-mode="filterMode = $event"
+                @set-view-mode="setViewMode"
+                @toggle-expand="onToggleExpand"
               />
-          </div>
-        </div>
 
-        <div v-if="activeTab === 'news'" class="view-wrapper">
-          <div class="dashboard-content">
-              <NewsFeed 
-                :news-items="newsItems"
-                :is-loading-more="isLoadingMoreNews"
-                :all-loaded="allNewsLoaded"
-                :is-header-hidden="isHeaderHidden"
-                @load-more="loadMoreNews"
-              />
-          </div>
-        </div>
+              <div v-else-if="activeTab === 'telegram'" class="dashboard-content">
+                <TelegramFeed 
+                  :messages="telegramMessages"
+                  :is-connected="isConnected"
+                  :is-loading-more="isLoadingMore"
+                  :all-loaded="allLoaded"
+                  :is-header-hidden="isHeaderHidden"
+                  @load-more="loadMoreMessages"
+                />
+              </div>
+
+              <div v-else-if="activeTab === 'news'" class="dashboard-content">
+                <NewsFeed 
+                  :news-items="newsItems"
+                  :is-loading-more="isLoadingMoreNews"
+                  :all-loaded="allNewsLoaded"
+                  :is-header-hidden="isHeaderHidden"
+                  @load-more="loadMoreNews"
+                />
+              </div>
+            </div>
+          </KeepAlive>
+        </Transition>
       </div>
       
     </main>

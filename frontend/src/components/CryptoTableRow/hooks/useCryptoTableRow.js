@@ -65,7 +65,7 @@ export const useCryptoTableRow = (coin) => {
     }
 
     function formatTvl(val) {
-        if (val === undefined || val === null) return 'N/A'
+        if (val === undefined || val === null || val === 0) return '$0'
         if (val >= 1000000000) {
             return `$${(val / 1000000000).toFixed(2)}B`
         }
@@ -76,14 +76,13 @@ export const useCryptoTableRow = (coin) => {
     }
 
     function formatTvlChange(val) {
-        if (val === undefined || val === null) return ''
+        if (val === undefined || val === null || val === 0) return '0.0%'
         return `${val > 0 ? '+' : ''}${val.toFixed(1)}%`
     }
 
     function getTvlChangeClass(val) {
-        if (val > 0) return 'text-success'
         if (val < 0) return 'text-danger'
-        return 'text-muted'
+        return 'text-success'
     }
 
     return {
