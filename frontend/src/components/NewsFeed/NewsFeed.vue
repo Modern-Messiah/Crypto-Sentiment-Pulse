@@ -1,61 +1,29 @@
 <template>
   <div class="news-feed" :class="{ 'header-hidden': isHeaderHidden }">
-    <div class="feed-header">
-      <div class="title-group">
-        <h2 class="feed-title">
-          CryptoPanic News
-        </h2>
-        <p class="feed-disclaimer">
-          Updates every 6 hours (Free Tier). Showing news from yesterday.
-        </p>
-      </div>
-      <span 
-        class="status-badge" 
-        :class="{ loading: isLoadingMore, live: newsItems.length > 0 }"
-      >
-        {{ newsItems.length > 0 ? 'Live' : 'Loading...' }}
-      </span>
-    </div>
+    <NewsFeedHeader 
+      :is-loading-more="isLoadingMore" 
+      :has-news="newsItems.length > 0" 
+    />
     
-    <div 
-      v-if="newsItems.length > 0" 
-      class="news-list"
-      ref="scrollContainer"
-      @scroll="handleScroll"
-    >
-      <NewsItem 
-        v-for="(item, index) in newsItems" 
-        :key="item.id"
-        :item="item"
-        :is-new="index === 0"
-      />
-      
-      <div v-if="isLoadingMore" class="loading-more">
-        <div class="spinner-small"></div>
-        <span>Loading more...</span>
-      </div>
-      
-      <div v-if="allLoaded && newsItems.length > 0" class="all-loaded">
-        <span>No more news</span>
-      </div>
+    <NewsList 
+      v-if="newsItems.length > 0"
+      :news-items="newsItems"
+      :is-loading-more="isLoadingMore"
+      :all-loaded="allLoaded"
+      @load-more="$emit('load-more')"
+    />
 
-    </div>
-
-    <div v-else class="empty-state glass-card">
-      <p>No news yet. Waiting for updates...</p>
-    </div>
-
-    <ScrollToTop :target="scrollContainer" />
+    <EmptyState v-else />
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import NewsItem from './components/NewsItem.vue'
-import ScrollToTop from '../UI/ScrollToTop/ScrollToTop.vue'
+import NewsFeedHeader from './components/NewsFeedHeader.vue'
+import NewsList from './components/NewsList.vue'
+import EmptyState from './components/EmptyState.vue'
 import './styles/NewsFeed.css'
 
-const props = defineProps({
+defineProps({
   newsItems: {
     type: Array,
     default: () => []
@@ -74,18 +42,5 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['load-more'])
-
-const scrollContainer = ref(null)
-
-const handleScroll = (event) => {
-  const el = scrollContainer.value
-  if (!el) return
-  
-  if (el.scrollTop + el.clientHeight >= el.scrollHeight - 50) {
-    if (!props.isLoadingMore && !props.allLoaded) {
-      emit('load-more')
-    }
-  }
-}
+defineEmits(['load-more'])
 </script>
