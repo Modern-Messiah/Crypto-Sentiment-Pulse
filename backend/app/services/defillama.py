@@ -30,7 +30,12 @@ async def get_chain_1d_change(slug: str, is_protocol: bool = False) -> float:
         async with httpx.AsyncClient(timeout=10.0) as client:
             response = await client.get(url)
             response.raise_for_status()
-            data = response.json()
+            
+            try:
+                data = response.json()
+            except ValueError:
+                logger.error(f"DefiLlama API returned non-JSON response for {slug}")
+                return 0.0
 
         if len(data) < 2:
             return 0.0
@@ -55,6 +60,9 @@ async def get_chain_1d_change(slug: str, is_protocol: bool = False) -> float:
 
         return 0.0
 
+    except httpx.HTTPError as e:
+        logger.error(f"HTTP error fetching historical TVL for {slug} (as {HISTORY_SLUG_OVERRIDES.get(slug, slug)}): {e}")
+        return 0.0
     except Exception as e:
         logger.error(f"Error fetching historical TVL for {slug} (as {HISTORY_SLUG_OVERRIDES.get(slug, slug)}): {e}")
         return 0.0

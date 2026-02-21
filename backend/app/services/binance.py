@@ -27,19 +27,19 @@ class BinancePriceStream:
         from datetime import datetime, timezone, timedelta
         
         logger.info("Fetching high-res initial history for all symbols (1m + 5m backfill)...")
+        tasks = []
+        for symbol in self.symbols:
+            # Fetch 60 candles of 1m = 1 hour high-res
+            tasks.append(self._fetch_and_persist(symbol.upper(), "1m", 60))
+            # Fetch 288 candles of 5m = 24 hours
+            tasks.append(self._fetch_and_persist(symbol.upper(), "5m", 288))
+        
+        await asyncio.gather(*tasks)
+        logger.info("High-res history fetching completed.")
+        
+        # Pre-populate RSI history from DB
         db = SessionLocal()
         try:
-            tasks = []
-            for symbol in self.symbols:
-                # Fetch 60 candles of 1m = 1 hour high-res
-                tasks.append(self._fetch_and_persist(db, symbol.upper(), "1m", 60))
-                # Fetch 288 candles of 5m = 24 hours
-                tasks.append(self._fetch_and_persist(db, symbol.upper(), "5m", 288))
-            
-            await asyncio.gather(*tasks)
-            logger.info("High-res history fetching completed.")
-            
-            # Pre-populate RSI history from DB
             for symbol in self.symbols:
                 s_upper = symbol.upper()
                 # Get last 50 entries
@@ -61,7 +61,7 @@ class BinancePriceStream:
         finally:
             db.close()
 
-    async def _fetch_and_persist(self, db, symbol_upper, interval, limit):
+    async def _fetch_and_persist(self, symbol_upper, interval, limit):
         import requests
         from app.models.price_history import PriceHistory
         from datetime import datetime, timezone
@@ -85,27 +85,35 @@ class BinancePriceStream:
                     ))
                 
                 if new_entries:
-                    await asyncio.to_thread(self._bulk_save_history, db, new_entries, symbol_upper)
+                    await asyncio.to_thread(self._bulk_save_history, new_entries, symbol_upper)
         except Exception as e:
             logger.error(f"Failed to fetch {interval} history for {symbol_upper}: {e}")
 
-    def _bulk_save_history(self, db, entries, symbol):
+    def _bulk_save_history(self, entries, symbol):
         from app.models.price_history import PriceHistory
         from datetime import datetime, timedelta
         
-        # Check existing timestamps to avoid exact duplicates
-        since = min(e.timestamp for e in entries) - timedelta(minutes=1)
-        existing_ts = db.query(PriceHistory.timestamp).filter(
-            PriceHistory.symbol == symbol,
-            PriceHistory.timestamp >= since
-        ).all()
-        existing_set = {t[0] for t in existing_ts}
-        
-        to_insert = [e for e in entries if e.timestamp not in existing_set]
-        if to_insert:
-            db.bulk_save_objects(to_insert)
-            db.commit()
-            logger.info(f"Backfilled {len(to_insert)} new points for {symbol}")
+        from app.db.session import SessionLocal
+        db = SessionLocal()
+        try:
+            # Check existing timestamps to avoid exact duplicates
+            since = min(e.timestamp for e in entries) - timedelta(minutes=1)
+            existing_ts = db.query(PriceHistory.timestamp).filter(
+                PriceHistory.symbol == symbol,
+                PriceHistory.timestamp >= since
+            ).all()
+            existing_set = {t[0] for t in existing_ts}
+            
+            to_insert = [e for e in entries if e.timestamp not in existing_set]
+            if to_insert:
+                db.bulk_save_objects(to_insert)
+                db.commit()
+                logger.info(f"Backfilled {len(to_insert)} new points for {symbol}")
+        except Exception as e:
+            db.rollback()
+            logger.error(f"Failed to bulk save history for {symbol}: {e}")
+        finally:
+            db.close()
 
     async def _persistence_loop(self):
         from app.db.session import SessionLocal
@@ -135,6 +143,7 @@ class BinancePriceStream:
                         db.commit()
                         logger.debug(f"Persisted {len(new_entries)} symbols to DB")
                 except Exception as e:
+                    db.rollback()
                     logger.error(f"Error in persistence loop: {e}")
                 finally:
                     db.close()
