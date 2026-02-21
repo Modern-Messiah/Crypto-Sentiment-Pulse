@@ -70,50 +70,11 @@ const avatarLetter = computed(() => {
   return props.message.channel_title?.charAt(0)?.toUpperCase() || '?'
 })
 
-const formattedTime = computed(() => {
-  const date = new Date(props.message.date)
-  return date.toLocaleTimeString('ru-RU', { 
-    hour: '2-digit', 
-    minute: '2-digit',
-    second: '2-digit'
-  })
-})
+import { formatTime, formatViews, formatTelegramText } from '../utils/formatters.js'
 
-const formattedViews = computed(() => {
-  const views = props.message.views || 0
-  if (views >= 1000000) return (views / 1000000).toFixed(1) + 'M'
-  if (views >= 1000) return (views / 1000).toFixed(1) + 'K'
-  return views.toString()
-})
-
-const formattedText = computed(() => {
-  if (!props.message.text) return ''
-  
-  let text = props.message.text
-  text = text.replace(/\[([^\]]+)\]\(tg:\/\/search_hashtag[^\s)]*\)/g, '$1')
-  text = text.replace(/\*{3,}/g, '')
-  text = text.replace(/-{3,}/g, '')
-  text = text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-  text = text.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, (match, linkText, url) => {
-    return `<a href="${url}" target="_blank" rel="noopener noreferrer">${linkText}</a>`
-  })
-
-  const urlRegex = /(?<![\]\(]|href=")(https?:\/\/[^\s<]+)(?![^<]*?<\/a>)/g
-  text = text.replace(urlRegex, (url) => {
-    return `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`
-  })
-
-  text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-  text = text.replace(/#\s+/g, '#')
-  text = text.replace(/(^|\s)(#[\w\u0400-\u04FF]+)/g, '$1<span class="hashtag">$2</span>')
-  text = text.replace(/\n{3,}/g, '\n\n')
-  text = text.replace(/\n/g, '<br>')
-  
-  return text
-})
+const formattedTime = computed(() => formatTime(props.message.date))
+const formattedViews = computed(() => formatViews(props.message.views))
+const formattedText = computed(() => formatTelegramText(props.message.text))
 
 const displayMediaType = computed(() => {
   if (props.message.media && props.message.media.length > 0) {

@@ -1,64 +1,27 @@
 <template>
   <div class="telegram-feed" :class="{ 'header-hidden': isHeaderHidden }">
-    <div class="feed-header">
-      <div class="title-group">
-        <h2 class="feed-title">
-          Telegram Feed
-        </h2>
-        <p class="feed-disclaimer">
-          Real-time updates. New messages appear instantly as they are received.
-        </p>
-      </div>
-      <span 
-        class="status-badge" 
-        :class="{ 
-          connected: isConnected && !isDemoMode, 
-          live: isConnected && !isDemoMode,
-          demo: isDemoMode,
-          disconnected: !isConnected 
-        }"
-      >
-        {{ statusText }}
-      </span>
-    </div>
+    <FeedHeader 
+      :is-connected="isConnected" 
+      :is-demo-mode="isDemoMode" 
+    />
     
-    <div 
-      v-if="messages.length > 0" 
-      class="messages-list"
-      ref="scrollContainer"
-      @scroll="handleScroll"
-    >
-      <TelegramMessage 
-        v-for="(msg, index) in messages" 
-        :key="`${msg.channel_username}-${msg.id}`"
-        :message="msg"
-        :is-new="index === 0"
-      />
-      
-      <div v-if="isLoadingMore" class="loading-more">
-        <div class="spinner-small"></div>
-        <span>Loading more...</span>
-      </div>
-      
-      <div v-if="allLoaded && messages.length > 0" class="all-loaded">
-        <span>No more messages</span>
-      </div>
+    <MessageList 
+      v-if="messages.length > 0"
+      :messages="messages"
+      :is-loading-more="isLoadingMore"
+      :all-loaded="allLoaded"
+      @load-more="$emit('load-more')"
+    />
 
-    </div>
-
-    <div v-else class="empty-state glass-card">
-      <div class="empty-icon"></div>
-      <p>No messages yet. Waiting for updates...</p>
-    </div>
-
-    <ScrollToTop :target="scrollContainer" />
+    <EmptyState v-else />
   </div>
 </template>
 
 <script setup>
-import { computed, ref, onMounted, onUnmounted } from 'vue'
-import TelegramMessage from './components/TelegramMessage.vue'
-import ScrollToTop from '../UI/ScrollToTop/ScrollToTop.vue'
+import { computed } from 'vue'
+import FeedHeader from './components/FeedHeader.vue'
+import MessageList from './components/MessageList.vue'
+import EmptyState from './components/EmptyState.vue'
 import './styles/TelegramFeed.css'
 
 const props = defineProps({
@@ -84,28 +47,9 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['load-more'])
-
-const scrollContainer = ref(null)
+defineEmits(['load-more'])
 
 const isDemoMode = computed(() => {
   return props.messages.some(m => m.is_demo)
 })
-
-const statusText = computed(() => {
-  if (!props.isConnected) return 'Disconnected'
-  if (isDemoMode.value) return 'Demo Mode'
-  return 'Live'
-})
-
-const handleScroll = (event) => {
-  const el = scrollContainer.value
-  if (!el) return
-  
-  if (el.scrollTop + el.clientHeight >= el.scrollHeight - 50) {
-    if (!props.isLoadingMore && !props.allLoaded) {
-      emit('load-more')
-    }
-  }
-}
 </script>
