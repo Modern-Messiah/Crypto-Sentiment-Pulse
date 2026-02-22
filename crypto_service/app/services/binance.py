@@ -63,7 +63,8 @@ class BinancePriceStream:
 
     async def fetch_initial_history(self):
         import requests
-        from app.db import SessionLocal, PriceHistory
+        from app.db.session import SessionLocal
+        from app.models.price_history import PriceHistory
 
         logger.info("Fetching high-res initial history for all symbols (1m + 5m backfill)...")
         tasks = []
@@ -97,7 +98,7 @@ class BinancePriceStream:
 
     async def _fetch_and_persist(self, symbol_upper, interval, limit):
         import requests
-        from app.db import PriceHistory
+        from app.models.price_history import PriceHistory
 
         try:
             url = f"https://api.binance.com/api/v3/klines?symbol={symbol_upper}&interval={interval}&limit={limit}"
@@ -123,7 +124,8 @@ class BinancePriceStream:
             logger.error(f"Failed to fetch {interval} history for {symbol_upper}: {e}")
 
     def _bulk_save_history(self, entries, symbol):
-        from app.db import SessionLocal, PriceHistory
+        from app.db.session import SessionLocal
+        from app.models.price_history import PriceHistory
 
         db = SessionLocal()
         try:
@@ -148,7 +150,8 @@ class BinancePriceStream:
     # ── Persistence Loop ─────────────────────────────────────────────
 
     async def _persistence_loop(self):
-        from app.db import SessionLocal, PriceHistory
+        from app.db.session import SessionLocal
+        from app.models.price_history import PriceHistory
 
         logger.info("Starting real-time persistence loop (5s)...")
         while self._running:
@@ -229,14 +232,14 @@ class BinancePriceStream:
 
     async def _fear_greed_update_loop(self, redis_client):
         from app.services.fear_greed import get_fear_greed_index
-        from app.config import REDIS_FEAR_GREED_KEY
+        from app.core.config import settings
 
         logger.info("Starting Fear & Greed update loop (5m)...")
         while self._running:
             try:
                 fg_data = await get_fear_greed_index()
                 if fg_data:
-                    await redis_client.set(REDIS_FEAR_GREED_KEY, json.dumps(fg_data))
+                    await redis_client.set(settings.REDIS_FEAR_GREED_KEY, json.dumps(fg_data))
                     logger.info(f"Fear & Greed updated: {fg_data.get('value')} ({fg_data.get('value_classification')})")
                 await asyncio.sleep(5 * 60)
             except asyncio.CancelledError:
@@ -369,7 +372,7 @@ class BinancePriceStream:
     # ── Redis Publishing Loop ────────────────────────────────────────
 
     async def _redis_publish_loop(self, redis_client):
-        from app.config import REDIS_CHANNEL, REDIS_PRICES_KEY
+        from app.core.config import settings
 
         logger.info("Starting Redis publish loop (1s)...")
         while self._running:
@@ -381,10 +384,10 @@ class BinancePriceStream:
                 payload = json.dumps({"prices": self.prices})
 
                 # Publish for WebSocket subscribers (backend → frontend)
-                await redis_client.publish(REDIS_CHANNEL, payload)
+                await redis_client.publish(settings.REDIS_CHANNEL, payload)
 
                 # Cache for REST endpoints
-                await redis_client.set(REDIS_PRICES_KEY, payload)
+                await redis_client.set(settings.REDIS_PRICES_KEY, payload)
 
             except asyncio.CancelledError:
                 break

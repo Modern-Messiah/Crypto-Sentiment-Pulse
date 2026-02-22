@@ -2,7 +2,7 @@ import asyncio
 import logging
 import redis.asyncio as aioredis
 
-from app.config import REDIS_URL, TRACKED_SYMBOLS
+from app.core.config import settings
 from app.services.binance import BinancePriceStream
 
 logging.basicConfig(
@@ -15,12 +15,11 @@ logger = logging.getLogger("crypto_service")
 async def main():
     logger.info("=" * 60)
     logger.info("Crypto Service starting...")
-    logger.info(f"Tracking {len(TRACKED_SYMBOLS)} symbols")
-    logger.info(f"Redis: {REDIS_URL}")
+    logger.info(f"Tracking {len(settings.TRACKED_SYMBOLS)} symbols")
+    logger.info(f"Redis: {settings.REDIS_URL}")
     logger.info("=" * 60)
 
-    # Connect to Redis (async)
-    redis_client = aioredis.from_url(REDIS_URL, decode_responses=True)
+    redis_client = aioredis.from_url(settings.REDIS_URL, decode_responses=True)
 
     try:
         await redis_client.ping()
@@ -29,8 +28,7 @@ async def main():
         logger.error(f"Failed to connect to Redis: {e}")
         raise
 
-    # Start Binance stream (this blocks forever internally)
-    stream = BinancePriceStream(TRACKED_SYMBOLS)
+    stream = BinancePriceStream(settings.TRACKED_SYMBOLS)
 
     try:
         await stream.start(redis_client)
