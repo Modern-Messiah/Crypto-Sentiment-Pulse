@@ -10,10 +10,27 @@ services:
       - PYTHONUNBUFFERED=1
       - DATABASE_URL=postgresql://user:pass@db:5432/cryptodb
       - REDIS_URL=redis://redis:6379/0
-      - BACKEND_API_URL=http://backend:8080/api/v1/prices/
       - TELEGRAM_API_ID=${TELEGRAM_API_ID:-}
       - TELEGRAM_API_HASH=${TELEGRAM_API_HASH:-}
       - CRYPTOPANIC_API_TOKEN=${CRYPTOPANIC_API_TOKEN:-}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      crypto-service:
+        condition: service_started
+    networks:
+      - crypto-network
+    restart: on-failure
+
+  crypto-service:
+    build: ./crypto_service
+    container_name: crypto_service
+    environment:
+      - PYTHONUNBUFFERED=1
+      - DATABASE_URL=postgresql://user:pass@db:5432/cryptodb
+      - REDIS_URL=redis://redis:6379/0
     depends_on:
       db:
         condition: service_healthy
@@ -30,7 +47,6 @@ services:
     environment:
       - DATABASE_URL=postgresql://user:pass@db:5432/cryptodb
       - REDIS_URL=redis://redis:6379/0
-      - BACKEND_API_URL=http://backend:8080/api/v1/prices/
       - CRYPTOPANIC_API_TOKEN=${CRYPTOPANIC_API_TOKEN:-}
     depends_on:
       db:
@@ -51,7 +67,6 @@ services:
     environment:
       - DATABASE_URL=postgresql://user:pass@db:5432/cryptodb
       - REDIS_URL=redis://redis:6379/0
-      - BACKEND_API_URL=http://backend:8080/api/v1/prices/
       - CRYPTOPANIC_API_TOKEN=${CRYPTOPANIC_API_TOKEN:-}
     depends_on:
       db:

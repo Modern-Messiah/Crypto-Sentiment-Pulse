@@ -4,7 +4,6 @@ from sqlalchemy import desc, text
 from datetime import datetime, timedelta
 from app.db.session import get_db
 from app.models.price_history import PriceHistory
-from app.services import binance as bs
 
 router = APIRouter()
 

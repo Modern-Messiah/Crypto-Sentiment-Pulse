@@ -1,4 +1,5 @@
 import asyncio
+import json
 import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
@@ -7,38 +8,79 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.api_v1.api import api_router
 from app.core.config import settings
 from app.core.ws_manager import manager
-from app.services import binance as bs
 from app.services import telegram as tg
 from app.db.session import engine
 from app.db.base import Base
 from fastapi.staticfiles import StaticFiles
 import os
 
+import redis.asyncio as aioredis
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Shared state: latest prices from crypto_service via Redis
+_latest_prices = {}
+
+
+def get_latest_prices() -> dict:
+    """Get latest prices received from crypto_service via Redis."""
+    return _latest_prices
+
+
+async def _redis_subscriber():
+    """Subscribe to Redis Pub/Sub channel and broadcast updates to WebSocket clients."""
+    global _latest_prices
+    redis_client = aioredis.from_url(settings.REDIS_URL, decode_responses=True)
+
+    while True:
+        try:
+            pubsub = redis_client.pubsub()
+            await pubsub.subscribe("crypto:updates")
+            logger.info("Subscribed to Redis channel 'crypto:updates'")
+
+            async for message in pubsub.listen():
+                if message["type"] == "message":
+                    try:
+                        data = json.loads(message["data"])
+                        _latest_prices = data.get("prices", {})
+                        await manager.broadcast({"type": "update", "data": data})
+                    except (json.JSONDecodeError, Exception) as e:
+                        logger.error(f"Error processing Redis message: {e}")
+
+        except asyncio.CancelledError:
+            logger.info("Redis subscriber cancelled")
+            await pubsub.unsubscribe("crypto:updates")
+            await redis_client.aclose()
+            return
+        except Exception as e:
+            logger.error(f"Redis subscriber error: {e}, reconnecting in 3s...")
+            await asyncio.sleep(3)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
 
     from app.models.cryptopanic_news import CryptoPanicNews  # noqa: ensure table is created
     Base.metadata.create_all(bind=engine)
-    
-    await bs.init_binance_stream(settings.TRACKED_SYMBOLS)
-    logger.info(f"Backend started. Tracking {len(settings.TRACKED_SYMBOLS)} symbols")
-    
+
+    # Start Redis subscriber (replaces direct Binance connection)
+    redis_task = asyncio.create_task(_redis_subscriber())
+    logger.info("Redis subscriber started — waiting for crypto_service updates")
+
     tg_service = await tg.init_telegram_service(
         api_id=settings.TELEGRAM_API_ID,
         api_hash=settings.TELEGRAM_API_HASH,
         session_name=settings.TELEGRAM_SESSION_NAME,
         channels=settings.TELEGRAM_CHANNELS
     )
-    
+
     async def on_telegram_message(msg):
         logger.info(f"Broadcasting telegram_update to {len(manager.active_connections)} clients")
         await manager.broadcast({"type": "telegram_update", "data": msg})
-    
+
     tg_service.set_message_callback(on_telegram_message)
-    
+
     logger.info(f"Telegram service started. Monitoring {len(settings.TELEGRAM_CHANNELS)} channels")
 
     # Initial CryptoPanic news fetch if DB is empty
@@ -88,8 +130,12 @@ async def lifespan(app: FastAPI):
 
     yield
 
-    if bs.binance_stream:
-        await bs.binance_stream.close()
+    redis_task.cancel()
+    try:
+        await redis_task
+    except asyncio.CancelledError:
+        pass
+
     if tg.telegram_service:
         await tg.telegram_service.close()
     logger.info("Backend shutdown complete")
@@ -134,16 +180,13 @@ async def websocket_endpoint(websocket: WebSocket):
 
     try:
         while True:
-            data = {}
-            
-            if bs.binance_stream:
-                prices = bs.binance_stream.get_prices()
-                if prices:
-                    data["prices"] = prices
-            if data:
-                await websocket.send_json({"type": "update", "data": data})
-
-            await asyncio.sleep(1)
+            # Keep connection alive; data is pushed via Redis subscriber broadcast
+            await asyncio.sleep(30)
+            # Send ping/keepalive
+            try:
+                await websocket.send_json({"type": "ping"})
+            except Exception:
+                break
 
     except WebSocketDisconnect:
         manager.disconnect(websocket)
@@ -154,4 +197,3 @@ async def websocket_endpoint(websocket: WebSocket):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8080)
-

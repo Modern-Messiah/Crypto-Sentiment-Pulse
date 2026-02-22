@@ -23,8 +23,6 @@ async def get_trending_symbols() -> Set[str]:
                     coin = item.get("item", {})
                     symbol = coin.get("symbol")
                     if symbol:
-                        # CoinGecko symbols are usually lowercase and can be anything
-                        # We convert to uppercase for matching with our tracked symbols
                         trending_symbols.add(symbol.upper())
             
             logger.info(f"Fetched {len(trending_symbols)} trending symbols from CoinGecko")

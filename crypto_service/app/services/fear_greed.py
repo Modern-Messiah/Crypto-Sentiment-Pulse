@@ -18,8 +18,6 @@ async def get_fear_greed_index():
             response.raise_for_status()
             data = response.json()
             
-            # The API returns data in 'data' list
-            # Structure: {"name": "Fear and Greed Index", "data": [{"value": "25", "value_classification": "Extreme Fear", "timestamp": "..."}]}
             if data and "data" in data and len(data["data"]) > 0:
                 item = data["data"][0]
                 return {
