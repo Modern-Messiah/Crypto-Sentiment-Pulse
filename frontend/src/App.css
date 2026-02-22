@@ -28,8 +28,6 @@
     transition: padding-top 0.4s ease;
 }
 
-
-
 .dashboard-content {
     display: flex;
     flex-direction: column;
@@ -139,8 +137,10 @@
     padding: 0.55rem 0;
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    transition: all 0.4s ease-in-out,
-        backdrop-filter 0s ease 0s, -webkit-backdrop-filter 0s ease 0s;
+    transition:
+        all 0.4s ease-in-out,
+        backdrop-filter 0s ease 0s,
+        -webkit-backdrop-filter 0s ease 0s;
     opacity: 1;
     transform: translateY(0);
 }
@@ -158,7 +158,6 @@
 .telegram-feed.header-hidden,
 .news-feed.header-hidden {
     gap: 0.25rem;
-    /* Tighten the gap between hidden header and list */
 }
 
 .title-group {
@@ -228,7 +227,6 @@
     .main-content.prices-layout.header-hidden {
         padding-top: 5rem !important;
     }
-
 
     .view-container {
         line-height: 1.5;

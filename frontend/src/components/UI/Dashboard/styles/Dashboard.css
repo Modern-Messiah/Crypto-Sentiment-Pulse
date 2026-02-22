@@ -69,7 +69,6 @@
     gap: 1.5rem;
     padding-bottom: 2rem;
     perspective: 2000px;
-    /* Enable 3D space for children */
 }
 
 .table-wrapper {
@@ -114,7 +113,9 @@
 }
 
 .list-leave-active {
-    transition: transform 0.4s ease, opacity 0.4s ease;
+    transition:
+        transform 0.4s ease,
+        opacity 0.4s ease;
     position: absolute;
 }
 
@@ -129,13 +130,14 @@
     transform: scale(0.9) translateY(-20px);
 }
 
-/* New transition for filter switching - container level */
 .filter-fade-enter-active {
     transition: opacity 0.4s ease;
 }
 
 .filter-fade-leave-active {
-    transition: opacity 0.3s ease, filter 0.3s ease;
+    transition:
+        opacity 0.3s ease,
+        filter 0.3s ease;
 }
 
 .filter-fade-enter-from {
