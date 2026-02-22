@@ -6,9 +6,7 @@ logger = logging.getLogger(__name__)
 FEAR_GREED_API_URL = "https://api.alternative.me/fng/"
 
 async def get_fear_greed_index():
-    """
-    Fetch the latest Fear & Greed Index from alternative.me
-    """
+
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
             response = await client.get(

@@ -1,25 +1,13 @@
 import httpx
 import logging
 import asyncio
-from typing import Dict, Any, List
+from typing import Dict, Any
+
+from app.services.defillama.config import DEFILLAMA_CHANS_URL, HISTORY_SLUG_OVERRIDES
 
 logger = logging.getLogger(__name__)
 
-DEFILLAMA_CHANS_URL = "https://api.llama.fi/chains"
-DEFILLAMA_STABLES_URL = "https://stablecoins.llama.fi/stablecoinchains"
-DEFILLAMA_PROTOCOLS_URL = "https://api.llama.fi/protocols"
-
-HISTORY_SLUG_OVERRIDES = {
-    "Binance": "BSC",
-    "Ripple": "XRPL",
-    "Cosmos": "CosmosHub",
-    "Near": "near",
-    "Optimism": "Optimism",
-    "Avalanche": "Avalanche"
-}
-
 async def get_chain_1d_change(slug: str, is_protocol: bool = False) -> float:
-
     try:
         if is_protocol:
             return 0.0 
@@ -68,36 +56,7 @@ async def get_chain_1d_change(slug: str, is_protocol: bool = False) -> float:
         return 0.0
 
 
-async def get_protocols_tvl(slugs: List[str]) -> Dict[str, Dict[str, Any]]:
-
-    try:
-        async with httpx.AsyncClient(timeout=15.0) as client:
-            response = await client.get(DEFILLAMA_PROTOCOLS_URL)
-            response.raise_for_status()
-            data = response.json()
-
-        proto_map = {}
-        target_slugs = set(slugs)
-
-        for p in data:
-            slug = p.get("slug")
-            if slug in target_slugs:
-                logger.info(f"Found protocol data for slug: {slug}")
-                proto_map[slug] = {
-                    "tvl": p.get("tvl", 0),
-                    "change_1d": p.get("change_1d", 0),
-                    "mcap": p.get("mcap", 0)
-                }
-
-        return proto_map
-
-    except Exception as e:
-        logger.error(f"Error fetching DefiLlama protocols: {e}")
-        return {}
-
-
 async def get_chains_tvl(detailed_chains: list[str] = None) -> Dict[str, Dict[str, Any]]:
-
     try:
         async with httpx.AsyncClient(timeout=15.0) as client:
             response = await client.get(DEFILLAMA_CHANS_URL)
@@ -126,49 +85,4 @@ async def get_chains_tvl(detailed_chains: list[str] = None) -> Dict[str, Dict[st
 
     except Exception as e:
         logger.error(f"Error fetching DefiLlama TVL data: {e}")
-        return {}
-
-
-async def get_stablecoin_flows() -> Dict[str, Dict[str, Any]]:
-
-    try:
-        async with httpx.AsyncClient(timeout=15.0) as client:
-            response = await client.get(DEFILLAMA_STABLES_URL)
-            response.raise_for_status()
-            data = response.json()
-
-        flow_map = {}
-        for chain in data:
-            name = chain.get("name")
-            if name:
-                current = chain.get("totalCirculating", {}).get("peggedUSD", 0)
-                prev = chain.get("circulatingPrevDay", {}).get("peggedUSD", 0)
-                flow_map[name] = {
-                    "mcap": current,
-                    "net_change_1d": prev,
-                    "net_flow_1d": current - prev
-                }
-
-        return flow_map
-
-    except Exception as e:
-        logger.error(f"Error fetching stablecoin flows: {e}")
-        return {}
-
-
-async def get_global_stats(tvl_data: Dict[str, Dict[str, Any]] = None) -> Dict[str, Any]:
-
-    try:
-        if tvl_data is None:
-            tvl_data = await get_chains_tvl()
-
-        total_tvl = sum(c["tvl"] for c in tvl_data.values())
-
-        return {
-            "total_tvl": total_tvl,
-            "chain_count": len(tvl_data)
-        }
-
-    except Exception as e:
-        logger.error(f"Error getting global stats: {e}")
         return {}

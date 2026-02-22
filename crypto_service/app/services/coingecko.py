@@ -7,10 +7,7 @@ logger = logging.getLogger(__name__)
 TRENDING_API_URL = "https://api.coingecko.com/api/v3/search/trending"
 
 async def get_trending_symbols() -> Set[str]:
-    """
-    Fetch trending search symbols from CoinGecko.
-    Returns a set of uppercase symbols (e.g. {'BTC', 'SOL', 'SHIB'})
-    """
+
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
             response = await client.get(TRENDING_API_URL)
