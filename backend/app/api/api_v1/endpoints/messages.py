@@ -6,7 +6,6 @@ from datetime import datetime
 
 from app.db.session import get_db
 from app.models.message import Message
-from app.services import telegram as tg
 
 router = APIRouter()
 
@@ -71,17 +70,3 @@ def get_messages(
         ))
     
     return responses
-
-
-@router.get("/status")
-def get_telegram_status():
-    """Get Telegram service status"""
-    if not tg.telegram_service:
-        return {"status": "not_initialized", "demo_mode": True}
-    
-    return {
-        "status": "running",
-        "demo_mode": tg.telegram_service.is_demo_mode,
-        "messages_buffered": len(tg.telegram_service.messages),
-        "channels_count": len(tg.telegram_service.channels)
-    }
