@@ -24,6 +24,17 @@
     background: var(--bg-primary);
 }
 
+.header.fixed-layout {
+    position: fixed;
+    width: 100%;
+    left: 0;
+}
+
+.header.fixed-layout.hidden {
+    margin-top: 0;
+    transform: translateY(-100%);
+}
+
 
 
 .header-content {

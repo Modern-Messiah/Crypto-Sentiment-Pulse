@@ -6,9 +6,13 @@
       :global-stats="globalStats"
       :active-tab="activeTab"
       :is-hidden="isHeaderHidden"
+      :class="{ 'fixed-layout': activeTab === 'prices' }"
     />
     
-    <main class="main-content" :class="{ 'header-hidden': isHeaderHidden }">
+    <main class="main-content" :class="{ 
+      'header-hidden': isHeaderHidden,
+      'prices-layout': activeTab === 'prices'
+    }">
       
       <div v-if="error" class="error-banner animate-fade-in">
         <div class="error-content">
