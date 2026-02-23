@@ -36,7 +36,6 @@ class MessageProcessor:
 
     async def process_raw_message(self, msg_or_event, username: str, title: str, is_edit: bool = False):
         try:
-            # 1. Parse Event
             parsed_msg = MessageParser.parse(msg_or_event, username, title, is_edit)
             if not parsed_msg:
                 logger.debug(f"Skipping empty/service update from @{username}")
@@ -45,7 +44,6 @@ class MessageProcessor:
             text_content = parsed_msg['text']
             grouped_id = parsed_msg['grouped_id']
 
-            # 2. De-duplication Check
             msg_key = (username, msg_or_event.id)
             if msg_key in self.processing_ids:
                 logger.debug(f"Skipping: Message {msg_or_event.id} from @{username} is already being processed")
@@ -66,7 +64,6 @@ class MessageProcessor:
             self.processing_ids.add(msg_key)
 
             try:
-                # 3. Media Download
                 has_media = False
                 media_type = None
                 media_path = None
@@ -74,7 +71,6 @@ class MessageProcessor:
                 if not self._demo_mode and self.client:
                     has_media, media_type, media_path = await self.media_downloader.download(self.client, msg_or_event, username)
 
-                # 4. Update Buffer State
                 if existing_in_buffer:
                     if not existing_in_buffer.get('text') and text_content:
                         existing_in_buffer['text'] = text_content
@@ -94,7 +90,6 @@ class MessageProcessor:
                         existing_in_buffer['media_type'] = media_type
                         existing_in_buffer['media_path'] = media_path
 
-                    # 5. Publish
                     await self.publisher.publish_to_redis(existing_in_buffer)
                     self.publisher.send_to_celery(existing_in_buffer)
                 else:
@@ -119,7 +114,6 @@ class MessageProcessor:
                     else:
                         self.messages.appendleft(parsed_msg)
 
-                    # 5. Publish
                     await self.publisher.publish_to_redis(parsed_msg)
                     self.publisher.send_to_celery(parsed_msg)
 

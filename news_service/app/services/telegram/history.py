@@ -12,7 +12,6 @@ class HistoryFetcher:
         self.publisher = publisher
 
     async def fetch(self):
-        """Fetches initial message history for all subscribed channels."""
         for username, info in self.channels.items():
             try:
                 messages = await self.client.get_messages(info['id'], limit=3)
@@ -40,7 +39,6 @@ class HistoryFetcher:
                     }
                     self.messages.appendleft(parsed_msg)
 
-                    # Persist history messages to database immediately
                     self.publisher.send_to_celery(parsed_msg)
             except Exception as e:
                 logger.error(f"Could not fetch history for {username}: {e}")

@@ -6,7 +6,6 @@ logger = logging.getLogger(__name__)
 class MessageParser:
     @staticmethod
     def parse(msg_or_event, username: str, title: str, is_edit: bool = False) -> dict:
-        """Parses a raw Telegram event into a structured dictionary."""
         text_content = getattr(msg_or_event, 'text', '') or getattr(msg_or_event, 'message', '') or ''
 
         if not text_content:

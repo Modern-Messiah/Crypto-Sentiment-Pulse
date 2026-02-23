@@ -30,9 +30,8 @@ class TelegramClientManager:
         try:
             loop = asyncio.get_event_loop()
             self.client = TelegramClient(self.session_path, self.api_id, self.api_hash, loop=loop)
-            self.processor.client = self.client # Assign client for media downloading
+            self.processor.client = self.client
             
-            # Setup History Fetcher and Heartbeat
             self.history_fetcher = HistoryFetcher(self.client, self.messages, self.channels, self.processor.publisher)
             self.heartbeat_monitor = HeartbeatMonitor(self.client, self.messages, self.channels, self.processor)
 
@@ -110,7 +109,7 @@ class TelegramClientManager:
                 'title': entity.title,
                 'subscribers': full.full_chat.participants_count or 0
             }
-            # Also update channels_by_id so that handlers map tg_id properly back to username
+
             self.channels_by_id[entity.id] = username
 
             logger.info(f"Subscribed to @{username} (ID: {entity.id}, {full.full_chat.participants_count} subscribers)")

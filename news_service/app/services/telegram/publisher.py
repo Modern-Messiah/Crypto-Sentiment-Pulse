@@ -11,7 +11,6 @@ class MessagePublisher:
         self._redis_client = redis_client
 
     async def publish_to_redis(self, msg_data: dict):
-        """Publish message to Redis for backend to broadcast via WebSocket."""
         if self._redis_client:
             try:
                 payload = json.dumps({
@@ -23,7 +22,6 @@ class MessagePublisher:
                 logger.error(f"Error publishing to Redis: {e}")
 
     def send_to_celery(self, msg_data: dict):
-        """Send task to Celery for persistence."""
         try:
             celery_app.send_task(
                 "app.tasks.telegram_tasks.persist_telegram_message",
