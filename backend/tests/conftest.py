@@ -19,10 +19,8 @@ def test_client():
     with TestClient(app) as client:
         yield client
 
-# Optionally, mock the db dependency if we have db-dependent tests
 @pytest.fixture
 def mock_db_session():
-    # Simple fake session that we can patch or customize per test
     class FakeSession:
         async def execute(self, *args, **kwargs):
             return None

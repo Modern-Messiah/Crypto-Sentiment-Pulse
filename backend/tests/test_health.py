@@ -12,7 +12,6 @@ def test_health_check_ok(mock_redis, test_client: TestClient):
     
     if response.status_code == 200:
         data = response.json()
-        # the status logic makes it 'healthy' if prices > 0, else 'connecting'
         assert data["status"] in ["healthy", "connecting"]
     else:
         assert response.status_code == 503
