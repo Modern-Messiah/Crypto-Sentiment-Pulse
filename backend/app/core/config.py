@@ -1,5 +1,5 @@
 from typing import List, Optional
-
+from pydantic import ConfigDict
 from pydantic_settings import BaseSettings
 
 
@@ -56,9 +56,7 @@ class Settings(BaseSettings):
         "CoinTelegraph",
     ]
 
-    class Config:
-        case_sensitive = True
-        env_file = ".env"
+    model_config = ConfigDict(case_sensitive=True, env_file=".env")
 
 
 settings = Settings()
