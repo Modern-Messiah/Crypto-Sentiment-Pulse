@@ -74,12 +74,12 @@ async def get_chains_tvl(detailed_chains: list[str] = None) -> Dict[str, Dict[st
                 }
 
         if detailed_chains:
-            logger.info(f"Fetching historical TVL for {len(detailed_chains)} chains")
-            tasks = [get_chain_1d_change(name) for name in detailed_chains]
-            changes = await asyncio.gather(*tasks)
-            for name, change in zip(detailed_chains, changes):
+            logger.info(f"Fetching historical TVL for {len(detailed_chains)} chains sequentially with a delay to avoid rate limits")
+            for name in detailed_chains:
+                change = await get_chain_1d_change(name)
                 if name in tvl_map:
                     tvl_map[name]["change_1d"] = change
+                await asyncio.sleep(0.5)
 
         return tvl_map
 
