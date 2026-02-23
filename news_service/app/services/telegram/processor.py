@@ -1,11 +1,9 @@
-import json
 import logging
 from collections import deque
-from datetime import datetime
 
-from app.core.celery_app import celery_app
-from app.core.config import settings
 from .media import MediaDownloader
+from .parser import MessageParser
+from .publisher import MessagePublisher
 
 logger = logging.getLogger(__name__)
 
@@ -15,9 +13,9 @@ class MessageProcessor:
         self.messages = messages_buffer
         self.channels = channels
         self.channels_by_id = channels_by_id
-        self._redis_client = redis_client
         self.processing_ids = set()
         self.media_downloader = MediaDownloader()
+        self.publisher = MessagePublisher(redis_client)
         self._demo_mode = is_demo
 
     async def handle_message(self, event, is_edit=False):
@@ -38,22 +36,16 @@ class MessageProcessor:
 
     async def process_raw_message(self, msg_or_event, username: str, title: str, is_edit: bool = False):
         try:
-            text_content = getattr(msg_or_event, 'text', '') or getattr(msg_or_event, 'message', '') or ''
+            # 1. Parse Event
+            parsed_msg = MessageParser.parse(msg_or_event, username, title, is_edit)
+            if not parsed_msg:
+                logger.debug(f"Skipping empty/service update from @{username}")
+                return
 
-            if not text_content:
-                if getattr(msg_or_event, 'photo', None) or getattr(msg_or_event, 'video', None) or getattr(msg_or_event, 'document', None):
-                    text_content = "[Media Content]"
-                elif getattr(msg_or_event, 'poll', None):
-                    text_content = f"[Poll: {msg_or_event.poll.poll.question}]"
-                elif getattr(msg_or_event, 'venue', None) or getattr(msg_or_event, 'geo', None):
-                    text_content = "[Location/Venue]"
-                else:
-                    logger.debug(f"Skipping empty/service update from @{username}")
-                    return
+            text_content = parsed_msg['text']
+            grouped_id = parsed_msg['grouped_id']
 
-            grouped_id = getattr(msg_or_event, 'grouped_id', None)
-
-            # De-duplication
+            # 2. De-duplication Check
             msg_key = (username, msg_or_event.id)
             if msg_key in self.processing_ids:
                 logger.debug(f"Skipping: Message {msg_or_event.id} from @{username} is already being processed")
@@ -74,7 +66,7 @@ class MessageProcessor:
             self.processing_ids.add(msg_key)
 
             try:
-                # Media handling
+                # 3. Media Download
                 has_media = False
                 media_type = None
                 media_path = None
@@ -82,23 +74,7 @@ class MessageProcessor:
                 if not self._demo_mode and self.client:
                     has_media, media_type, media_path = await self.media_downloader.download(self.client, msg_or_event, username)
 
-                parsed_msg = {
-                    'id': msg_or_event.id,
-                    'channel_username': username,
-                    'channel_title': title,
-                    'text': text_content,
-                    'views': getattr(msg_or_event, 'views', 0) or 0,
-                    'forwards': getattr(msg_or_event, 'forwards', 0) or 0,
-                    'date': msg_or_event.date.isoformat() if hasattr(msg_or_event, 'date') and msg_or_event.date else datetime.utcnow().isoformat() + "Z",
-                    'timestamp': datetime.utcnow().isoformat() + "Z",
-                    'is_edit': is_edit,
-                    'grouped_id': grouped_id,
-                    'has_media': has_media,
-                    'media_type': media_type,
-                    'media_path': media_path,
-                    'media_list': []
-                }
-
+                # 4. Update Buffer State
                 if existing_in_buffer:
                     if not existing_in_buffer.get('text') and text_content:
                         existing_in_buffer['text'] = text_content
@@ -118,9 +94,14 @@ class MessageProcessor:
                         existing_in_buffer['media_type'] = media_type
                         existing_in_buffer['media_path'] = media_path
 
-                    # Publish to Redis for backend WebSocket broadcast
-                    await self._publish_telegram_update(existing_in_buffer)
+                    # 5. Publish
+                    await self.publisher.publish_to_redis(existing_in_buffer)
+                    self.publisher.send_to_celery(existing_in_buffer)
                 else:
+                    parsed_msg['has_media'] = has_media
+                    parsed_msg['media_type'] = media_type
+                    parsed_msg['media_path'] = media_path
+                    
                     if has_media and media_path:
                         parsed_msg['media_list'] = [{
                             'type': media_type,
@@ -138,14 +119,9 @@ class MessageProcessor:
                     else:
                         self.messages.appendleft(parsed_msg)
 
-                    # Publish to Redis for backend WebSocket broadcast
-                    await self._publish_telegram_update(parsed_msg)
-
-                # Send Celery task for DB persistence
-                celery_app.send_task(
-                    "app.tasks.telegram_tasks.persist_telegram_message",
-                    args=[parsed_msg]
-                )
+                    # 5. Publish
+                    await self.publisher.publish_to_redis(parsed_msg)
+                    self.publisher.send_to_celery(parsed_msg)
 
                 logger.info(f"Processed {'edit' if is_edit else 'msg'} from @{username}: {text_content[:50]}...")
             finally:
@@ -153,15 +129,3 @@ class MessageProcessor:
 
         except Exception as e:
             logger.error(f"Error processing raw message: {e}", exc_info=True)
-
-    async def _publish_telegram_update(self, msg_data: dict):
-        """Publish message to Redis for backend to broadcast via WebSocket."""
-        if self._redis_client:
-            try:
-                payload = json.dumps({
-                    "type": "telegram_update",
-                    "data": msg_data
-                }, default=str)
-                await self._redis_client.publish(settings.REDIS_CHANNEL_TELEGRAM, payload)
-            except Exception as e:
-                logger.error(f"Error publishing to Redis: {e}")

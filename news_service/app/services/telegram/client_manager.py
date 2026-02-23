@@ -1,10 +1,9 @@
 import asyncio
 import logging
-import os
-from datetime import datetime
 from collections import deque
 
-from app.core.celery_app import celery_app
+from .history import HistoryFetcher
+from .heartbeat import HeartbeatMonitor
 
 try:
     from telethon import TelegramClient, events
@@ -25,12 +24,17 @@ class TelegramClientManager:
         self.processor = message_processor
         self.client = None
         self._running = False
+        self.heartbeat_monitor = None
 
     async def start(self, channel_usernames: list[str]) -> bool:
         try:
             loop = asyncio.get_event_loop()
             self.client = TelegramClient(self.session_path, self.api_id, self.api_hash, loop=loop)
             self.processor.client = self.client # Assign client for media downloading
+            
+            # Setup History Fetcher and Heartbeat
+            self.history_fetcher = HistoryFetcher(self.client, self.messages, self.channels, self.processor.publisher)
+            self.heartbeat_monitor = HeartbeatMonitor(self.client, self.messages, self.channels, self.processor)
 
             self.channels_by_id.update({info['id']: username for username, info in self.channels.items()})
             logger.info(f"Registering handlers for {len(self.channels)} channels.")
@@ -55,12 +59,12 @@ class TelegramClientManager:
             await self.client.get_dialogs(limit=10)
 
             logger.info("Fetching initial history...")
-            await self._fetch_initial_history()
+            await self.history_fetcher.fetch()
 
             self._running = True
             logger.info(f"Telegram monitoring fully active.")
 
-            asyncio.create_task(self._heartbeat())
+            self.heartbeat_monitor.start()
             return True
 
         except Exception as e:
@@ -94,67 +98,6 @@ class TelegramClientManager:
         except:
             pass
 
-    async def _heartbeat(self):
-        while self._running:
-            try:
-                if self.client and await self.client.is_user_authorized():
-                    me = await self.client.get_me()
-                    isConnected = self.client.is_connected()
-
-                    for username, info in self.channels.items():
-                        try:
-                            msgs = await self.client.get_messages(info['id'], limit=1)
-                            if msgs:
-                                m = msgs[0]
-                                if not any(msg['id'] == m.id and msg['channel_username'] == username for msg in self.messages):
-                                    logger.info(f"POLL: Found new message from @{username}")
-                                    await self.processor.process_raw_message(m, username, info['title'])
-                        except Exception as poll_e:
-                            logger.error(f"Poll error for {username}: {poll_e}")
-
-                    logger.info(f"Telegram heartbeat: Connected={isConnected}, User={me.username}, Buffer={len(self.messages)}")
-                else:
-                    logger.warning("Telegram heartbeat: Client not authorized")
-            except Exception as e:
-                logger.error(f"Telegram heartbeat error: {e}")
-            await asyncio.sleep(10)
-
-    async def _fetch_initial_history(self):
-        for username, info in self.channels.items():
-            try:
-                messages = await self.client.get_messages(info['id'], limit=3)
-                for msg in messages:
-                    text_content = msg.text or msg.message or ""
-                    if not text_content:
-                        if msg.photo or msg.video or msg.document:
-                            text_content = "[Media Content]"
-                        elif msg.poll:
-                            text_content = f"[Poll: {msg.poll.poll.question}]"
-                        elif msg.venue or msg.geo:
-                            text_content = "[Location/Venue]"
-                        else:
-                            text_content = "[Message]"
-
-                    parsed_msg = {
-                        'id': msg.id,
-                        'channel_username': username,
-                        'channel_title': info['title'],
-                        'text': text_content,
-                        'views': getattr(msg, 'views', 0) or 0,
-                        'forwards': getattr(msg, 'forwards', 0) or 0,
-                        'date': msg.date.isoformat() if msg.date else datetime.utcnow().isoformat() + "Z",
-                        'timestamp': datetime.utcnow().isoformat() + "Z"
-                    }
-                    self.messages.appendleft(parsed_msg)
-
-                    # Send Celery task for DB persistence
-                    celery_app.send_task(
-                        "app.tasks.telegram_tasks.persist_telegram_message",
-                        args=[parsed_msg]
-                    )
-            except Exception as e:
-                logger.error(f"Could not fetch history for {username}: {e}")
-
     async def _subscribe_channel(self, username: str):
         try:
             entity = await self.client.get_entity(username)
@@ -178,6 +121,9 @@ class TelegramClientManager:
 
     async def close(self):
         self._running = False
+        if self.heartbeat_monitor:
+            self.heartbeat_monitor.stop()
+
         if self.client:
             await self.client.disconnect()
             logger.info("Telegram client disconnected")
