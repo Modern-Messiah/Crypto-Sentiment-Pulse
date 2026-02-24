@@ -46,9 +46,9 @@ const handleScroll = (event) => {
 const scrollToTop = () => {
     const el = getTargetEl(props.target)
     if (el === window) {
-        window.scrollTo({ top: 0, behavior: 'smooth' })
+        window.scrollTo({ top: 0 })
     } else {
-        el.scrollTo({ top: 0, behavior: 'smooth' })
+        el.scrollTo({ top: 0 })
     }
 }
 
