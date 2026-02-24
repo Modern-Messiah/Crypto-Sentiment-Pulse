@@ -5,8 +5,9 @@ import { usePriceFilters } from './composables/usePriceFilters'
 import { useNewsData } from './composables/useNewsData'
 
 export const useApp = () => {
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
     const WS_URL = import.meta.env.PROD
-        ? `ws://${window.location.host}/ws`
+        ? `${protocol}//${window.location.host}/ws`
         : 'ws://localhost:8080/ws'
 
     const {

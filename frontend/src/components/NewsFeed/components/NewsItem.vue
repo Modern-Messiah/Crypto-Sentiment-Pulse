@@ -60,9 +60,10 @@ const displaySource = computed(() => {
 
 const formattedTime = computed(() => {
   const date = new Date(props.item.published_at)
-  return date.toLocaleTimeString('en-US', { 
+  return date.toLocaleTimeString('ru-RU', { 
     hour: '2-digit', 
-    minute: '2-digit'
+    minute: '2-digit',
+    second: '2-digit'
   })
 })
 
