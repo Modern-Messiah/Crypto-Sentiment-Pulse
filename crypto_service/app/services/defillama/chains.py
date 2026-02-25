@@ -2,7 +2,7 @@ import logging
 import asyncio
 from typing import Dict, Any
 
-from app.services.defillama.config import DEFILLAMA_CHANS_URL, HISTORY_SLUG_OVERRIDES, create_client
+from app.services.defillama.config import DEFILLAMA_PROXY_BASE, DEFILLAMA_CHANS_URL, HISTORY_SLUG_OVERRIDES, create_client
 
 logger = logging.getLogger(__name__)
 
@@ -12,7 +12,7 @@ async def get_chain_1d_change(slug: str, is_protocol: bool = False) -> float:
             return 0.0 
 
         fetch_slug = HISTORY_SLUG_OVERRIDES.get(slug, slug)
-        url = f"https://api.llama.fi/v2/historicalChainTvl/{fetch_slug}"
+        url = f"{DEFILLAMA_PROXY_BASE}/v2/historicalChainTvl/{fetch_slug}"
 
         async with create_client(timeout=10.0) as client:
             response = await client.get(url)
