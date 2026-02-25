@@ -17,13 +17,20 @@ def persist_telegram_message(message_data: dict):
         channel = db.query(Channel).filter(Channel.username == username).first()
         
         if not channel:
-            channel = Channel(
-                username=username,
-                title=message_data.get('channel_title', username),
-                is_active=True
-            )
-            db.add(channel)
-            db.flush()
+            try:
+                with db.begin_nested():
+                    channel = Channel(
+                        username=username,
+                        title=message_data.get('channel_title', username),
+                        is_active=True
+                    )
+                    db.add(channel)
+                db.flush()
+            except Exception:
+                db.rollback()
+                channel = db.query(Channel).filter(Channel.username == username).first()
+                if not channel:
+                    raise
             
         tg_msg_id = message_data.get('id')
         grouped_id = message_data.get('grouped_id')

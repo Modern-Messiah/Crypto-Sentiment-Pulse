@@ -38,16 +38,22 @@ def fetch_and_persist_news(news_list: list):
             if existing:
                 continue
 
-            news = CryptoPanicNews(
-                title=title,
-                description=item.get("description"),
-                published_at=published_at,
-                kind=item.get("kind", "news"),
-                source_title=item.get("source", {}).get("title") if isinstance(item.get("source"), dict) else None,
-                url=item.get("url"),
-            )
-            db.add(news)
-            new_count += 1
+            try:
+                with db.begin_nested():
+                    news = CryptoPanicNews(
+                        title=title,
+                        description=item.get("description"),
+                        published_at=published_at,
+                        kind=item.get("kind", "news"),
+                        source_title=item.get("source", {}).get("title") if isinstance(item.get("source"), dict) else None,
+                        url=item.get("url"),
+                    )
+                    db.add(news)
+                db.flush()
+                new_count += 1
+            except Exception:
+                db.rollback()
+                logger.debug(f"Skipping duplicate news: {title}")
 
         db.commit()
         logger.info(f"Persisted {new_count} new CryptoPanic news items")
