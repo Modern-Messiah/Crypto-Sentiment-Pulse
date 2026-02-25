@@ -1,5 +1,4 @@
 import logging
-from app.services.binance.config import TVL_MAPPING
 
 logger = logging.getLogger(__name__)
 
@@ -52,15 +51,22 @@ class BinanceProcessorMixin:
                             rsi = 50.0
 
                     is_trending = False
-                    for trending in self.trending_symbols:
-                        if trending in symbol:
-                            is_trending = True
-                            break
+                    tvl_info = self.tvl_data.get(symbol, {})
+                    cg_id = tvl_info.get('cg_id')
+                    rank = tvl_info.get('rank')
+                    
+                    # Mark as trending if it's in trending list OR in top 15 by market cap 
+                    # (CoinGecko search UI usually shows both)
+                    if rank and rank <= 15:
+                        is_trending = True
+                    else:
+                        for trending in self.trending_symbols:
+                            if trending in symbol or (cg_id and trending == cg_id):
+                                is_trending = True
+                                break
 
-                    tvl_key = TVL_MAPPING.get(symbol)
-                    tvl_info = self.tvl_data.get(tvl_key) if tvl_key else None
-                    flow_info = self.money_flows.get(tvl_key) if tvl_key else None
-
+                    tvl_info = self.tvl_data.get(symbol)
+                    
                     self.prices[symbol] = {
                         'symbol': symbol,
                         'price': price,
@@ -73,7 +79,7 @@ class BinanceProcessorMixin:
                         'is_trending': is_trending,
                         'tvl': tvl_info.get('tvl') if tvl_info else None,
                         'tvl_change_1d': tvl_info.get('change_1d') if tvl_info else None,
-                        'money_flow_24h': flow_info.get('net_flow_1d') if flow_info else None,
+                        'money_flow_24h': None, # No longer from CoinGecko markets
                         'global_stats': self.global_stats
                     }
 

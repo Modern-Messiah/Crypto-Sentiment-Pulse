@@ -1,7 +1,7 @@
 <template>
   <div v-if="stats.total_tvl" class="defi-stats">
     <div class="stat-item">
-      <span class="stat-label">Global DeFi TVL</span>
+      <span class="stat-label">Global Market Cap</span>
       <span class="stat-value">{{ formatTVL(stats.total_tvl) }}</span>
     </div>
     <div class="stat-divider"></div>

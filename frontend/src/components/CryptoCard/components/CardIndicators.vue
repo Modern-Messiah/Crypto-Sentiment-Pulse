@@ -2,7 +2,7 @@
   <div class="card-indicators">
     <div v-if="data.tvl" class="tvl-container">
       <div class="tvl-info">
-        <span class="tvl-label" title="Total Value Locked - the total amount of assets currently being held in this network or protocol.">TVL</span>
+        <span class="rsi-label" title="Market Capitalization - the total market value of a cryptocurrency's circulating supply.">M.Cap</span>
         <div class="tvl-values">
           <span class="tvl-value">{{ formatTvl(data.tvl) }}</span>
           <span v-if="data.tvl_change_1d !== undefined" 

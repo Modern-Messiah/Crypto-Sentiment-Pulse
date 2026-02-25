@@ -20,30 +20,23 @@ class BinanceUpdaterMixin:
                 logger.error(f"Error in trending update loop: {e}")
                 await asyncio.sleep(60)
 
-    async def _defillama_update_loop(self):
-        from app.services.defillama import get_chains_tvl, get_stablecoin_flows, get_global_stats, get_protocols_tvl
-        from app.services.binance.config import DETAILED_CHAINS, TRACKED_PROTOCOLS
+    async def _coingecko_market_data_loop(self):
+        from app.services.coingecko import get_coins_markets_data, COINGECKO_IDS_MAPPING
 
-        logger.info("Starting DefiLlama update loop (5m)...")
+        logger.info("Starting CoinGecko market data update loop (10m)...")
         while self._running:
             try:
-                self.tvl_data = await get_chains_tvl(detailed_chains=DETAILED_CHAINS)
+                symbols = list(COINGECKO_IDS_MAPPING.keys())
+                self.tvl_data = await get_coins_markets_data(symbols)
+                
+                self.money_flows = {} 
+                self.global_stats = {}
 
-                proto_data, self.money_flows, self.global_stats = await asyncio.gather(
-                    get_protocols_tvl(TRACKED_PROTOCOLS),
-                    get_stablecoin_flows(),
-                    get_global_stats()
-                )
-
-                for slug, data in proto_data.items():
-                    logger.debug(f"Merging protocol data into tvl_data: {slug}")
-                    self.tvl_data[slug] = data
-
-                await asyncio.sleep(5 * 60)
+                await asyncio.sleep(10 * 60)
             except asyncio.CancelledError:
                 break
             except Exception as e:
-                logger.error(f"Error in DefiLlama update loop: {e}")
+                logger.error(f"Error in CoinGecko market data update loop: {e}")
                 await asyncio.sleep(60)
 
     async def _fear_greed_update_loop(self, redis_client):

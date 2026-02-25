@@ -43,7 +43,7 @@ class BinancePriceStream(
 
         asyncio.create_task(self._persistence_loop())
         asyncio.create_task(self._trending_update_loop())
-        asyncio.create_task(self._defillama_update_loop())
+        asyncio.create_task(self._coingecko_market_data_loop())
         asyncio.create_task(self._fear_greed_update_loop(redis_client))
         asyncio.create_task(self._redis_publish_loop(redis_client))
 

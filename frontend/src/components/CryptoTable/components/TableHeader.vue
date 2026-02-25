@@ -18,7 +18,7 @@
         <span class="sort-icon" :class="{ active: sortKey === 'rsi' }">{{ sortOrder === 'asc' ? '↑' : '↓' }}</span>
       </th>
       <th @click="$emit('sort', 'tvl')" class="sortable text-right mobile-hide">
-        TVL
+        Market Cap
         <span class="sort-icon" :class="{ active: sortKey === 'tvl' }">{{ sortOrder === 'asc' ? '↑' : '↓' }}</span>
       </th>
       <th @click="$emit('sort', 'volume_24h')" class="sortable text-right mobile-hide">
