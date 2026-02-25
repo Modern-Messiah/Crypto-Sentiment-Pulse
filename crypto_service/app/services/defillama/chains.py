@@ -7,6 +7,11 @@ from app.services.defillama.config import DEFILLAMA_CHANS_URL, HISTORY_SLUG_OVER
 
 logger = logging.getLogger(__name__)
 
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    "Accept": "application/json",
+}
+
 async def get_chain_1d_change(slug: str, is_protocol: bool = False) -> float:
     try:
         if is_protocol:
@@ -15,7 +20,7 @@ async def get_chain_1d_change(slug: str, is_protocol: bool = False) -> float:
         fetch_slug = HISTORY_SLUG_OVERRIDES.get(slug, slug)
         url = f"https://api.llama.fi/v2/historicalChainTvl/{fetch_slug}"
 
-        async with httpx.AsyncClient(timeout=10.0) as client:
+        async with httpx.AsyncClient(timeout=10.0, headers=HEADERS) as client:
             response = await client.get(url)
             response.raise_for_status()
             
@@ -58,7 +63,7 @@ async def get_chain_1d_change(slug: str, is_protocol: bool = False) -> float:
 
 async def get_chains_tvl(detailed_chains: list[str] = None) -> Dict[str, Dict[str, Any]]:
     try:
-        async with httpx.AsyncClient(timeout=15.0) as client:
+        async with httpx.AsyncClient(timeout=15.0, headers=HEADERS) as client:
             response = await client.get(DEFILLAMA_CHANS_URL)
             response.raise_for_status()
             data = response.json()
