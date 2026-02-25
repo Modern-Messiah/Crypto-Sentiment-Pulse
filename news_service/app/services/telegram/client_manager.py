@@ -42,7 +42,16 @@ class TelegramClientManager:
             self.client.add_event_handler(self._edit_message_handler, events.MessageEdited())
             self.client.add_event_handler(self._raw_update_handler, events.Raw())
 
-            await self.client.start()
+            await self.client.connect()
+            if not await self.client.is_user_authorized():
+                raise RuntimeError(
+                    "Telegram session not authorized. "
+                    "Run auth script first: docker compose exec -it news-service python -c "
+                    "\"from telethon.sync import TelegramClient; import os; "
+                    "c = TelegramClient('/data/sessions/crypto_bot', "
+                    "int(os.environ['TELEGRAM_API_ID']), os.environ['TELEGRAM_API_HASH']); "
+                    "c.start(); c.disconnect()\""
+                )
             logger.info("Connected and authorized in Telegram!")
 
             asyncio.create_task(self.client.run_until_disconnected())
