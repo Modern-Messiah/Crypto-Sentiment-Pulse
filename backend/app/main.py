@@ -18,17 +18,14 @@ import redis.asyncio as aioredis
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Shared state: latest prices from crypto_service via Redis
 _latest_prices = {}
 
 
 def get_latest_prices() -> dict:
-    """Get latest prices received from crypto_service via Redis."""
     return _latest_prices
 
 
 async def _redis_subscriber():
-    """Subscribe to Redis Pub/Sub channels and broadcast updates to WebSocket clients."""
     global _latest_prices
     redis_client = aioredis.from_url(settings.REDIS_URL, decode_responses=True)
 
@@ -70,10 +67,9 @@ async def _redis_subscriber():
 @asynccontextmanager
 async def lifespan(app: FastAPI):
 
-    from app.models.cryptopanic_news import CryptoPanicNews  # noqa: ensure table is created
+    from app.models.cryptopanic_news import CryptoPanicNews
     Base.metadata.create_all(bind=engine)
 
-    # Start Redis subscriber for crypto_service + news_service updates
     redis_task = asyncio.create_task(_redis_subscriber())
     logger.info("Redis subscriber started — listening for crypto:updates, news:telegram, news:cryptopanic")
 
@@ -101,7 +97,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Ensure media directory exists
 media_path = "/data/media"
 if not os.path.exists(media_path):
     os.makedirs(media_path, exist_ok=True)
@@ -127,9 +122,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
     try:
         while True:
-            # Keep connection alive; data is pushed via Redis subscriber broadcast
             await asyncio.sleep(30)
-            # Send ping/keepalive
             try:
                 await websocket.send_json({"type": "ping"})
             except Exception:

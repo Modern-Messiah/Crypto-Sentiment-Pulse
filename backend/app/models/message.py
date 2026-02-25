@@ -30,7 +30,7 @@ class Message(Base):
     views = Column(Integer, default=0)
     forwards = Column(Integer, default=0)
 
-    has_media = Column(Integer, default=0)  # 0 or 1
+    has_media = Column(Integer, default=0) 
     media_type = Column(String, nullable=True)
     media_path = Column(String, nullable=True)
 

@@ -25,8 +25,8 @@ class MessageResponse(BaseModel):
     date: str
     is_demo: Optional[bool] = False
     has_media: Optional[bool] = False
-    media_type: Optional[str] = None # Keeping for backward compatibility
-    media_url: Optional[str] = None  # Keeping for backward compatibility
+    media_type: Optional[str] = None
+    media_url: Optional[str] = None
     media: List[MediaItem] = []
 
 
@@ -36,7 +36,6 @@ def get_messages(
     skip: int = Query(default=0, ge=0),
     db: Session = Depends(get_db)
 ):
-    """Get messages from database for consistent pagination"""
     db_messages = (
         db.query(Message)
         .order_by(Message.telegram_date.desc(), Message.id.desc())

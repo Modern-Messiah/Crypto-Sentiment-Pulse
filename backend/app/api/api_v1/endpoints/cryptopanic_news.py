@@ -26,7 +26,6 @@ def get_news(
     skip: int = Query(default=0, ge=0),
     db: Session = Depends(get_db)
 ):
-    """Get CryptoPanic news from database with pagination"""
     db_news = (
         db.query(CryptoPanicNews)
         .order_by(CryptoPanicNews.published_at.desc())

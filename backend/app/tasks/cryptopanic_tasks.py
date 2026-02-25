@@ -3,20 +3,14 @@ import logging
 from app.core.celery_app import celery_app
 from app.db.session import SessionLocal
 from app.models.cryptopanic_news import CryptoPanicNews
-from app.services.cryptopanic import fetch_news_sync
 
 logger = logging.getLogger(__name__)
 
 
 @celery_app.task(name="app.tasks.cryptopanic_tasks.fetch_and_persist_news")
-def fetch_and_persist_news():
-    """
-    Fetch news from CryptoPanic API and persist to database.
-    Uses sync HTTP client since Celery tasks are synchronous.
-    """
-    news_list = fetch_news_sync()
+def fetch_and_persist_news(news_list: list):
     if not news_list:
-        logger.info("No news fetched from CryptoPanic")
+        logger.info("No news received from news_service")
         return
 
     db = SessionLocal()
@@ -36,7 +30,6 @@ def fetch_and_persist_news():
             except (ValueError, TypeError):
                 published_at = datetime.utcnow()
 
-            # Check for duplicate
             existing = db.query(CryptoPanicNews).filter(
                 CryptoPanicNews.title == title,
                 CryptoPanicNews.published_at == published_at

@@ -65,7 +65,6 @@ services:
     environment:
       - DATABASE_URL=postgresql://user:pass@db:5432/cryptodb
       - REDIS_URL=redis://redis:6379/0
-      - CRYPTOPANIC_API_TOKEN=${CRYPTOPANIC_API_TOKEN:-}
     depends_on:
       db:
         condition: service_healthy

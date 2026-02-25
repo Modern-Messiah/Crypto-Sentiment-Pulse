@@ -34,7 +34,6 @@ def get_channels(db: Session = Depends(get_db)):
 
 @router.post("", response_model=ChannelResponse)
 def add_channel(channel_data: ChannelCreate, db: Session = Depends(get_db)):
-    """Add a new channel to monitor. News service will pick it up on restart."""
     existing = db.query(Channel).filter(Channel.username == channel_data.username).first()
     if existing:
         raise HTTPException(status_code=400, detail="Channel already exists")
@@ -56,7 +55,6 @@ def add_channel(channel_data: ChannelCreate, db: Session = Depends(get_db)):
 
 @router.delete("/{channel_id}")
 def delete_channel(channel_id: int, db: Session = Depends(get_db)):
-    """Remove a channel from monitoring"""
     channel = db.query(Channel).filter(Channel.id == channel_id).first()
     if not channel:
         raise HTTPException(status_code=404, detail="Channel not found")

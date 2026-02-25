@@ -26,13 +26,6 @@ async def get_history(symbol: str, period: str = "15m", limit: int = 1000, db: S
     else:
         start_time = now - timedelta(minutes=15)
 
-
-    # Use bucketing based on period to avoid returning thousands of points
-    # 1m, 5m, 15m -> no bucketing (1-10s resolution)
-    # 1h -> 1m buckets
-    # 4h -> 5m buckets
-    # 24h -> 15m buckets
-    
     bucket_interval = None
     if period == "1h":
         bucket_interval = "1 minute"
@@ -42,7 +35,6 @@ async def get_history(symbol: str, period: str = "15m", limit: int = 1000, db: S
         bucket_interval = "15 minutes"
 
     if bucket_interval:
-        # Use raw SQL for efficient time bucketing in PostgreSQL
         sql = f"""
             SELECT 
                 date_trunc('minute', timestamp) - (CAST(extract(minute FROM timestamp) AS integer) % {bucket_interval.split()[0]}) * interval '1 minute' as bucket,
@@ -53,11 +45,7 @@ async def get_history(symbol: str, period: str = "15m", limit: int = 1000, db: S
             ORDER BY bucket DESC
             LIMIT :limit
         """
-        # Note: The above is a bit complex for generic grouping. 
-        # Simpler approach: floor the timestamp to interval
-        
         if period == "1h":
-            # 1 minute buckets
             sql = """
                 SELECT date_trunc('minute', timestamp) as bucket, AVG(price) as avg_price
                 FROM price_history
@@ -65,7 +53,6 @@ async def get_history(symbol: str, period: str = "15m", limit: int = 1000, db: S
                 GROUP BY bucket ORDER BY bucket DESC LIMIT :limit
             """
         elif period == "4h":
-            # 5 minute buckets
             sql = """
                 SELECT 
                     to_timestamp(floor(extract(epoch from timestamp) / 300) * 300) as bucket,
@@ -74,8 +61,7 @@ async def get_history(symbol: str, period: str = "15m", limit: int = 1000, db: S
                 WHERE symbol = :symbol AND timestamp >= :start_time
                 GROUP BY bucket ORDER BY bucket DESC LIMIT :limit
             """
-        else: # 24h
-            # 15 minute buckets
+        else:
             sql = """
                 SELECT 
                     to_timestamp(floor(extract(epoch from timestamp) / 900) * 900) as bucket,
@@ -95,7 +81,6 @@ async def get_history(symbol: str, period: str = "15m", limit: int = 1000, db: S
             for r in reversed(result)
         ]
     else:
-        # Standard query for 15m or small datasets
         query = (
             db.query(PriceHistory)
             .filter(PriceHistory.symbol == symbol, PriceHistory.timestamp >= start_time)

@@ -9,10 +9,7 @@ logger = logging.getLogger(__name__)
 
 @celery_app.task(name="app.tasks.telegram_tasks.persist_telegram_message")
 def persist_telegram_message(message_data: dict):
-    """
-    Persist a telegram message and its media to the database.
-    Supports albums via grouped_id.
-    """
+
     from app.models.message import MessageMedia
     db = SessionLocal()
     try:
@@ -32,15 +29,12 @@ def persist_telegram_message(message_data: dict):
         grouped_id = message_data.get('grouped_id')
         
         existing = None
-        # 1. Check if it's part of an album
         if grouped_id:
-            # Look for an existing message in the same channel with same grouped_id
             existing = db.query(Message).filter(
                 Message.channel_id == channel.id,
                 Message.grouped_id == grouped_id
             ).first()
 
-        # 2. If not an album or not found, check by telegram_message_id
         if not existing:
             existing = db.query(Message).filter(
                 Message.channel_id == channel.id,
@@ -48,7 +42,7 @@ def persist_telegram_message(message_data: dict):
             ).first()
 
         if not existing:
-            # Create new message
+
             new_msg = Message(
                 channel_id=channel.id,
                 telegram_message_id=tg_msg_id,
@@ -57,8 +51,8 @@ def persist_telegram_message(message_data: dict):
                 views=message_data.get('views', 0),
                 forwards=message_data.get('forwards', 0),
                 has_media=1 if message_data.get('has_media') else 0,
-                media_type=message_data.get('media_type'), # Still keep for legacy
-                media_path=message_data.get('media_path'),   # Still keep for legacy
+                media_type=message_data.get('media_type'),
+                media_path=message_data.get('media_path'),
                 telegram_date=datetime.fromisoformat(message_data.get('date')) if message_data.get('date') else datetime.utcnow()
             )
             db.add(new_msg)
@@ -66,17 +60,13 @@ def persist_telegram_message(message_data: dict):
             existing = new_msg
             logger.info(f"Persisted new message {tg_msg_id} from @{username}")
         else:
-            # Update stats
             existing.views = message_data.get('views', existing.views)
             existing.forwards = message_data.get('forwards', existing.forwards)
-            # If the new part has text but existing doesn't, update it (common in albums)
             if not existing.text and message_data.get('text'):
                 existing.text = message_data.get('text')
             db.flush()
 
-        # 3. Handle Media
         if message_data.get('has_media') and message_data.get('media_path'):
-            # Check if this specific media is already attached
             media_exists = db.query(MessageMedia).filter(
                 MessageMedia.message_id == existing.id,
                 MessageMedia.media_path == message_data.get('media_path')
@@ -89,7 +79,6 @@ def persist_telegram_message(message_data: dict):
                     media_path=message_data.get('media_path')
                 )
                 db.add(new_media)
-                # Also update legacy fields if they are empty
                 if not existing.media_path:
                     existing.has_media = 1
                     existing.media_type = new_media.media_type

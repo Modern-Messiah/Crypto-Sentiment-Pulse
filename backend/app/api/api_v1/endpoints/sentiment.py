@@ -13,9 +13,6 @@ router = APIRouter()
 
 @router.get("/fear-greed")
 async def read_fear_greed():
-    """
-    Get the latest Fear & Greed Index from Redis cache (updated by crypto_service).
-    """
     try:
         r = aioredis.from_url(settings.REDIS_URL, decode_responses=True)
         raw = await r.get("crypto:fear_greed")
@@ -25,7 +22,6 @@ async def read_fear_greed():
     except Exception as e:
         logger.error(f"Error reading Fear & Greed from Redis: {e}")
 
-    # Fallback if data not available
     return {
         "value": 50,
         "value_classification": "Neutral",

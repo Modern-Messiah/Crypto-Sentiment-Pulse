@@ -38,8 +38,6 @@ class Settings(BaseSettings):
 
     TELEGRAM_API_ID: Optional[int] = None
     TELEGRAM_API_HASH: Optional[str] = None
-    CRYPTOPANIC_API_TOKEN: Optional[str] = None
-
     TELEGRAM_SESSION_NAME: str = "crypto_sentiment_bot"
     TELEGRAM_CHANNELS: List[str] = [
         "binance_ru",

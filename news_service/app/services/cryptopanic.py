@@ -13,10 +13,7 @@ CRYPTOPANIC_API_URL = "https://cryptopanic.com/api/developer/v2/posts/"
 
 
 async def fetch_news() -> list[dict]:
-    """
-    Fetch latest news from CryptoPanic API.
-    Returns a list of news dicts or empty list on failure.
-    """
+
     token = settings.CRYPTOPANIC_API_TOKEN
     if not token:
         logger.warning("CRYPTOPANIC_API_TOKEN not set, skipping news fetch")
@@ -43,13 +40,9 @@ async def fetch_news() -> list[dict]:
 
 
 async def cryptopanic_fetch_loop(redis_client):
-    """
-    Periodically fetch CryptoPanic news, send Celery task
-    for DB persistence, and publish to Redis for WebSocket broadcast.
-    """
+
     logger.info(f"Starting CryptoPanic fetch loop (every {settings.CRYPTOPANIC_FETCH_INTERVAL}s)...")
 
-    # Initial fetch on startup
     await _do_fetch_and_publish(redis_client)
 
     while True:
@@ -65,23 +58,23 @@ async def cryptopanic_fetch_loop(redis_client):
 
 
 async def _do_fetch_and_publish(redis_client):
-    """Fetch news, send Celery task, and publish to Redis."""
     try:
-        # Trigger the Celery task (same task the worker already handles)
-        celery_app.send_task(
-            "app.tasks.cryptopanic_tasks.fetch_and_persist_news"
-        )
-        logger.info("Sent CryptoPanic fetch task to Celery worker")
-
-        # Also fetch and publish to Redis for real-time WebSocket updates
         news_list = await fetch_news()
-        if news_list:
-            payload = json.dumps({
-                "type": "cryptopanic_update",
-                "data": news_list
-            }, default=str)
-            await redis_client.publish(settings.REDIS_CHANNEL_CRYPTOPANIC, payload)
-            logger.info(f"Published {len(news_list)} CryptoPanic news to Redis")
+        if not news_list:
+            return
+
+        celery_app.send_task(
+            "app.tasks.cryptopanic_tasks.fetch_and_persist_news",
+            args=[news_list]
+        )
+        logger.info(f"Sent {len(news_list)} CryptoPanic news to Celery worker for persistence")
+
+        payload = json.dumps({
+            "type": "cryptopanic_update",
+            "data": news_list
+        }, default=str)
+        await redis_client.publish(settings.REDIS_CHANNEL_CRYPTOPANIC, payload)
+        logger.info(f"Published {len(news_list)} CryptoPanic news to Redis")
 
     except Exception as e:
         logger.error(f"Error in CryptoPanic fetch and publish: {e}")
