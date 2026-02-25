@@ -1,9 +1,9 @@
 import httpx
 
-DEFILLAMA_PROXY_BASE = "https://young-thunder-398d.zolud6366.workers.dev"
-DEFILLAMA_CHANS_URL = f"{DEFILLAMA_PROXY_BASE}/chains"
+DEFILLAMA_API_BASE = "https://api.llama.fi"
+DEFILLAMA_CHANS_URL = f"{DEFILLAMA_API_BASE}/chains"
 DEFILLAMA_STABLES_URL = "https://stablecoins.llama.fi/stablecoinchains"
-DEFILLAMA_PROTOCOLS_URL = f"{DEFILLAMA_PROXY_BASE}/protocols"
+DEFILLAMA_PROTOCOLS_URL = f"{DEFILLAMA_API_BASE}/protocols"
 
 HISTORY_SLUG_OVERRIDES = {
     "Binance": "BSC",
