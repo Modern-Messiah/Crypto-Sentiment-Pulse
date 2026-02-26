@@ -1,0 +1,76 @@
+@startuml L2_container_v1
+left to right direction
+
+skinparam rectangle {
+    BackgroundColor<<container>> #438dd5
+    FontColor<<container>> #ffffff
+    BorderColor<<container>> #3c7fc0
+    BackgroundColor<<database>> #1168bd
+    FontColor<<database>> #ffffff
+    BorderColor<<database>> #0e4f96
+    BackgroundColor<<external>> #999999
+    FontColor<<external>> #ffffff
+    BorderColor<<external>> #888888
+}
+skinparam actor {
+    BackgroundColor<<user>> #08427b
+    FontColor<<user>> #ffffff
+    BorderColor<<user>> #073b6e
+}
+skinparam ArrowColor #666666
+skinparam FontName SansSerif
+
+title Container Diagram for Crypto-Sentiment-Pulse (Minimal)
+
+together {
+    actor "Crypto User" <<user>> as user
+    rectangle "Frontend\n[Nginx / Vue 3]\n:3000" <<container>> as frontend
+}
+
+together {
+    rectangle "Backend API\n[FastAPI]\n:8080" <<container>> as backend
+    rectangle "Celery Worker\n[Python]" <<container>> as celery_worker
+    rectangle "Celery Beat\n[Python]" <<container>> as celery_beat
+}
+
+together {
+    rectangle "Crypto Service\n[Python]" <<container>> as crypto_service
+    rectangle "News Service\n[Python]" <<container>> as news_service
+}
+
+together {
+    database "Redis\n[Broker / PubSub]\n:6379" <<database>> as redis
+    database "PostgreSQL\n:5432" <<database>> as db
+}
+
+together {
+    rectangle "Binance" <<external>> as binance
+    rectangle "Telegram" <<external>> as telegram
+    rectangle "CryptoPanic" <<external>> as cryptopanic
+}
+
+celery_worker    -[hidden]down-> celery_beat
+crypto_service   -[hidden]down-> news_service
+binance          -[hidden]down-> telegram
+telegram         -[hidden]down-> cryptopanic
+redis            -[hidden]down-> db
+
+user             ->  frontend        : "Uses"
+frontend         ->  backend         : "REST / WebSocket"
+
+backend          ->  redis           : "Subscribe events"
+backend          ->  db              : "Reads / Writes"
+
+celery_worker    ->  redis           : "Consume tasks"
+celery_worker    ->  db              : "Store data"
+celery_beat      ->  redis           : "Schedule tasks"
+
+crypto_service   ->  redis           : "Publish prices"
+crypto_service   ->  db              : "Store OHLCV"
+crypto_service   ->  binance         : "Market data (WSS)"
+
+news_service     ->  redis           : "Publish messages & news"
+news_service     ->  telegram        : "Scrape (MTProto)"
+news_service     ->  cryptopanic     : "Fetch news (REST)"
+
+@enduml

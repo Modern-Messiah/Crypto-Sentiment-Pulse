@@ -206,7 +206,5 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 frontend/node_modules
-pl.md
-plan_mini.md
-plan.md
 data/
+.github/workflows

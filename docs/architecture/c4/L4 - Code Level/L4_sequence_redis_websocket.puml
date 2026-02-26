@@ -1,0 +1,80 @@
+@startuml L4_sequence_redis_websocket
+skinparam sequence {
+    ActorBackgroundColor #08427b
+    ActorFontColor #ffffff
+    ParticipantBackgroundColor #438dd5
+    ParticipantFontColor #ffffff
+    ParticipantBorderColor #3c7fc0
+    DatabaseBackgroundColor #1168bd
+    DatabaseFontColor #ffffff
+    ArrowColor #666666
+    LifeLineBorderColor #666666
+    BoxBackgroundColor #f5f5f5
+    BoxBorderColor #cccccc
+}
+skinparam FontName SansSerif
+
+title Sequence Diagram — Redis Pub/Sub to WebSocket Push (L4)
+
+actor "Browser\n(Crypto Trader)" as user
+participant "FastAPI\n[lifespan startup]" as main
+database "Redis" as redis
+participant "ConnectionManager\n[ws_manager.py]" as manager
+participant "WebSocket\n[client connection]" as ws
+participant "Crypto / News\nService" as ext
+
+== Application Startup ==
+main -> redis : SUBSCRIBE crypto:updates
+main -> redis : PSUBSCRIBE news:*
+note right of main : asyncio task spawned\nin FastAPI lifespan
+
+== Client Connect ==
+user -> ws       : GET /ws (HTTP Upgrade)
+ws   -> manager  : connect(websocket)
+manager -> manager : add to active_connections
+ws  --> user     : 101 Switching Protocols
+
+== Ingestion Cycle: Price Update ==
+ext -> redis : PUBLISH crypto:updates\n{"prices": {...}, "fear_greed": 72}
+redis -> main : Subscriber wakes up\n(message received)
+
+activate main
+main -> main : json.loads(message["data"])
+main -> manager : broadcast(event_type, payload)
+activate manager
+
+loop for connection in active_connections
+    manager -> ws   : send_json(data)
+    activate ws
+    ws      -> user : Push real-time JSON
+    deactivate ws
+end
+
+alt Client Disconnected (RuntimeError)
+    manager -> manager : disconnect(websocket)
+    manager -> manager : active_connections.remove(ws)
+    note right of manager : Stale connection\ncleaned up silently
+end
+
+deactivate manager
+deactivate main
+
+== Ingestion Cycle: News Update ==
+ext -> redis : PUBLISH news:telegram\n{"text": "...", "sentiment": 0.8}
+redis -> main : Pattern subscriber wakes up
+activate main
+main -> manager : broadcast("news", payload)
+activate manager
+loop for connection in active_connections
+    manager -> ws   : send_json(data)
+    ws      -> user : Push news JSON
+end
+deactivate manager
+deactivate main
+
+== Client Disconnect ==
+user    -> ws      : Close connection
+ws      -> manager : disconnect(websocket)
+manager -> manager : active_connections.remove(ws)
+
+@enduml

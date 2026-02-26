@@ -1,0 +1,47 @@
+@startuml L1_system_context_v3
+left to right direction
+
+skinparam rectangle {
+    BackgroundColor<<system>> #1168bd
+    FontColor<<system>> #ffffff
+    BorderColor<<system>> #0e4f96
+    BackgroundColor<<external>> #999999
+    FontColor<<external>> #ffffff
+    BorderColor<<external>> #888888
+}
+skinparam actor {
+    BackgroundColor<<user>> #08427b
+    FontColor<<user>> #ffffff
+    BorderColor<<user>> #073b6e
+}
+skinparam package {
+    BackgroundColor #f5f5f5
+    BorderColor #cccccc
+    FontColor #333333
+}
+skinparam ArrowColor #666666
+skinparam FontName SansSerif
+
+title System Context Diagram for Crypto-Sentiment-Pulse (Data Flow Emphasis)
+
+package "Consumers" {
+    actor "==Crypto Trader\n[Person]" <<user>> as trader
+}
+
+rectangle "==Crypto-Sentiment-Pulse\n[Software System]\n\nETL platform aggregating data." <<system>> as crypto_pulse
+
+package "External Data Sources" {
+    rectangle "==Binance Exchange\n[System]" <<external>> as binance
+    rectangle "==Telegram Channels\n[System]" <<external>> as telegram
+    rectangle "==CryptoPanic Service\n[System]" <<external>> as cryptopanic
+}
+
+binance    -[hidden]down-> telegram
+telegram   -[hidden]down-> cryptopanic
+
+crypto_pulse -[#1168bd,bold]->   trader      : "Live updates: prices, messages, news\n[WebSocket Push]"
+binance      -[#green,dashed]->  crypto_pulse : "Ticker events (Price, Vol, Change%)\n[WSS]"
+telegram     -[#red,dashed]->    crypto_pulse : "Messages & media\n[MTProto / TCP]"
+cryptopanic  -[#orange,dashed]-> crypto_pulse : "News metadata (Titles, URLs)\n[HTTPS / REST]"
+
+@enduml

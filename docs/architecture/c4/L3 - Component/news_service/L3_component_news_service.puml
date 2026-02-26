@@ -1,0 +1,64 @@
+@startuml L3_component_news_service
+left to right direction
+
+skinparam rectangle {
+    BackgroundColor<<component>> #438dd5
+    FontColor<<component>> #ffffff
+    BorderColor<<component>> #3c7fc0
+    BackgroundColor<<database>> #1168bd
+    FontColor<<database>> #ffffff
+    BorderColor<<database>> #0e4f96
+    BackgroundColor<<external>> #999999
+    FontColor<<external>> #ffffff
+    BorderColor<<external>> #888888
+}
+skinparam ArrowColor #666666
+skinparam FontName SansSerif
+
+title Component Diagram — News Service (Social / News Aggregator)
+
+rectangle "News Service" {
+    rectangle "Main\n[main.py]" <<component>> as main
+
+    package "Telegram Pipeline" {
+        rectangle "TelegramService\n[service.py]" <<component>> as tg_service
+        rectangle "MessageProcessor\n[processor.py]" <<component>> as processor
+        rectangle "MessageParser\n[parser.py]" <<component>> as parser
+        rectangle "MediaDownloader\n[media.py]" <<component>> as media
+        rectangle "MessagePublisher\n[publisher.py]" <<component>> as publisher
+    }
+
+    rectangle "CryptoPanic Scraper\n[cryptopanic.py]" <<component>> as panic
+}
+
+rectangle "Telegram MTProto" <<external>> as tg_ext
+rectangle "CryptoPanic REST" <<external>> as panic_ext
+database "Redis" <<database>> as redis
+
+' Force stacking inside pipeline
+tg_service  -[hidden]down-> processor
+processor   -[hidden]down-> parser
+parser      -[hidden]down-> media
+media       -[hidden]down-> publisher
+
+' Entry points
+main        ->                tg_service  : "start(channels)"
+main        ->                panic       : "asyncio.create_task()"
+
+' Telegram pipeline
+tg_service  -[#gray,dashed]-> tg_ext     : "Telethon client (MTProto)"
+tg_ext      -[#gray,dashed]-> tg_service : "NewEvent / Message"
+tg_service  ->                processor  : "handle_message()"
+processor   ->                parser     : "parse_raw()"
+processor   ->                media      : "download_if_needed()"
+processor   ->                publisher  : "publish_results()"
+
+' CryptoPanic pipeline
+panic       -[#gray,dashed]-> panic_ext  : "HTTPS GET (polling)"
+panic_ext   -[#gray,dashed]-> panic      : "JSON news response"
+
+' Redis outputs — no DB, Celery persists downstream
+publisher   -[#green,dashed]-> redis     : "PUBLISH news:telegram\n→ Celery persist task"
+panic       -[#green,dashed]-> redis     : "PUBLISH news:cryptopanic\n→ Celery persist task"
+
+@enduml

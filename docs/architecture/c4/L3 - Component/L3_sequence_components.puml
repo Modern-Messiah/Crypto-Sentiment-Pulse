@@ -1,0 +1,154 @@
+@startuml L3_sequence_components
+skinparam sequence {
+    ActorBackgroundColor #08427b
+    ActorFontColor #ffffff
+    ParticipantBackgroundColor #438dd5
+    ParticipantFontColor #ffffff
+    ParticipantBorderColor #3c7fc0
+    DatabaseBackgroundColor #1168bd
+    DatabaseFontColor #ffffff
+    ArrowColor #666666
+    LifeLineBorderColor #666666
+    BoxBackgroundColor #f5f5f5
+    BoxBorderColor #cccccc
+}
+skinparam FontName SansSerif
+
+title Sequence Diagram — Internal Component Interactions (L3)
+
+== Scenario 1 — Backend: WS Connection & Redis Broadcast ==
+
+participant "FastAPI Lifespan" as lifespan
+participant "_redis_subscriber\n[asyncio task]" as sub
+participant "ConnectionManager\n[ws_manager.py]" as manager
+participant "WebSocket\n[client]" as ws
+database "Redis" as redis
+
+lifespan    ->  sub     : asyncio.create_task(_redis_subscriber)
+activate sub
+sub         ->  redis   : pubsub.subscribe("crypto:updates")\npsubscribe("news:*")
+note right of sub : Task runs indefinitely\nin FastAPI lifespan
+
+note over ws : User opens dashboard
+ws          ->  manager : connect(websocket)
+activate manager
+manager     ->  ws      : websocket.accept()
+manager     ->  manager : active_connections.append(ws)
+deactivate manager
+
+redis       ->  sub     : message received on channel
+activate sub
+sub         ->  sub     : json.loads(message["data"])
+sub         ->  manager : broadcast(processed_data)
+activate manager
+
+loop for conn in active_connections
+    manager ->  ws      : conn.send_json(message)
+    activate ws
+    alt Client disconnected (RuntimeError / WebSocketDisconnect)
+        ws  --X manager : exception raised
+        manager -> manager : disconnect(conn)\nactive_connections.remove(conn)
+        note right of manager : Stale connection\ncleaned up silently
+    else Send successful
+        ws  --> manager : OK
+    end
+    deactivate ws
+end
+deactivate manager
+deactivate sub
+
+== Scenario 2 — CryptoService: Binance Tick to Storage ==
+
+participant "BinancePriceStream\n[stream.py]" as stream
+participant "ProcessorMixin\n[processor.py]" as processor
+participant "UpdaterMixin\n[updater.py]" as updater
+participant "FearGreedService\n[fear_greed.py]" as fg
+participant "PersistenceMixin\n[persistence.py]" as persistence
+participant "Alternative.me API" as fng_api
+database "Redis" as redis
+database "PostgreSQL" as db
+
+stream      ->  stream      : ws.recv() — raw ticker JSON
+activate stream
+stream      ->  processor   : process_message(raw_data)
+activate processor
+processor   ->  processor   : extract symbol, price,\nvolume, change%
+processor   ->  updater     : update_price_buffer(normalized_tick)
+deactivate processor
+
+note over updater : parallel asyncio loop\n_fear_greed_update_loop()
+updater     ->  fg          : get_fear_greed_index()
+activate fg
+fg          ->  fng_api     : HTTPS GET /fng/?limit=1
+fng_api     --> fg          : {value, classification, timestamp}
+fg          --> updater     : parsed fear_greed dict
+deactivate fg
+updater     ->  redis       : SET crypto:fear_greed (JSON, ex=300)
+
+note over updater : parallel asyncio loop\n_redis_publish_loop()
+updater     ->  redis       : PUBLISH crypto:updates\n{prices: [...], fear_greed: N}
+
+note over persistence : parallel asyncio loop\n_persistence_loop() every 5s
+persistence ->  db          : bulk_save_objects(List[PriceHistory])
+deactivate stream
+
+== Scenario 3 — NewsService: Telegram Message Flow ==
+
+participant "TelegramService\n[service.py]" as tg_service
+participant "MessageProcessor\n[processor.py]" as msg_processor
+participant "MessageParser\n[parser.py]" as parser
+participant "MediaDownloader\n[media.py]" as media
+participant "MessagePublisher\n[publisher.py]" as publisher
+database "Redis" as redis
+
+tg_service      ->  msg_processor : handle_message(event)
+activate msg_processor
+msg_processor   ->  parser        : parse(msg_or_event, username, title)
+activate parser
+parser          ->  parser        : extract text, coins,\ntimestamp, metadata
+parser          --> msg_processor : parsed_msg dict
+deactivate parser
+
+alt has_media == True
+    msg_processor   ->  media   : download(client, msg, username)
+    activate media
+    media           ->  media   : save to /data/media
+    media           --> msg_processor : media_path (str)
+    deactivate media
+else No media
+    note right of msg_processor : media_path = None\nskip download
+end
+
+msg_processor   ->  publisher : publish_to_redis(parsed_msg)
+activate publisher
+publisher       ->  redis     : PUBLISH news:telegram\n{text, channel, coins, media_path}
+note right of redis : CeleryWorker picks up\nvia BRPOP — no direct call
+deactivate publisher
+deactivate msg_processor
+
+== Scenario 4 — NewsService: CryptoPanic Polling ==
+
+participant "asyncio periodic\ntask" as task
+participant "CryptoPanicScraper\n[cryptopanic.py]" as scraper
+participant "CryptoPanic REST\nAPI" as panic_api
+database "Redis" as redis
+
+task        ->  scraper     : fetch_news()
+activate scraper
+scraper     ->  panic_api   : HTTPS GET /posts/?token=...
+activate panic_api
+alt Response 200 OK
+    panic_api   --> scraper : JSON {results: [...]}
+else Empty or error
+    panic_api   --> scraper : [] / HTTP error
+    note right of scraper   : Skip publish\nlog warning
+end
+deactivate panic_api
+scraper     ->  scraper     : parse articles\nextract title, url, source
+scraper     --> task        : List[news_item]
+deactivate scraper
+
+task        ->  redis       : PUBLISH news:cryptopanic\n{title, url, source, published_at}
+note right of redis : CeleryWorker picks up\nvia BRPOP — no direct call
+
+@enduml

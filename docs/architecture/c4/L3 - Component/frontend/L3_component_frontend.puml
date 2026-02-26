@@ -1,0 +1,70 @@
+@startuml L3_component_frontend
+left to right direction
+
+skinparam rectangle {
+    BackgroundColor<<component>> #438dd5
+    FontColor<<component>> #ffffff
+    BorderColor<<component>> #3c7fc0
+    BackgroundColor<<external>> #999999
+    FontColor<<external>> #ffffff
+    BorderColor<<external>> #888888
+}
+skinparam actor {
+    BackgroundColor<<user>> #08427b
+    FontColor<<user>> #ffffff
+    BorderColor<<user>> #073b6e
+}
+skinparam ArrowColor #666666
+skinparam FontName SansSerif
+
+title Component Diagram — Frontend (Vue 3 / Vite)
+
+actor "Crypto Trader" <<user>> as user
+rectangle "Backend API" <<external>> as backend
+
+rectangle "Frontend (Vue 3 / Vite)" {
+
+    package "Composables" {
+        rectangle "useWebSocket.js\n[WS Manager]" <<component>> as use_ws
+        rectangle "usePriceFilters.js\n[State & Sorting]" <<component>> as use_filters
+        rectangle "useNewsData.js\n[News State]" <<component>> as use_news
+    }
+
+    package "Views / Components" {
+        rectangle "Dashboard.vue\n[Price List]" <<component>> as dashboard
+        rectangle "TelegramFeed.vue\n[Live Messages]" <<component>> as tg_feed
+        rectangle "NewsFeed.vue\n[News Feed]" <<component>> as news_feed
+        rectangle "Header.vue\n[Global Stats]" <<component>> as header
+    }
+}
+
+' Force stacking
+use_ws      -[hidden]down-> use_filters
+use_filters -[hidden]down-> use_news
+dashboard   -[hidden]down-> tg_feed
+tg_feed     -[hidden]down-> news_feed
+news_feed   -[hidden]down-> header
+
+' User
+user        ->               dashboard   : "Interacts with UI"
+
+' WebSocket pipeline
+use_ws      -[#blue,bold]->  backend     : "WebSocket (/ws)"
+backend     -[#blue,bold]->  use_ws      : "JSON push: prices, messages, news"
+
+' REST initial load
+dashboard   -[#blue,bold]->  backend     : "GET /api/v1/prices"
+news_feed   -[#blue,bold]->  backend     : "GET /api/v1/news"
+header      -[#blue,bold]->  backend     : "GET /api/v1/sentiment"
+
+' Composable data flow
+use_ws      ->               use_filters : "Raw price updates"
+use_ws      ->               use_news    : "Raw news & messages"
+use_ws      ->               tg_feed     : "Live message buffer"
+
+' State → Views
+use_filters ->               dashboard   : "Filtered price array"
+use_filters ->               header      : "Market stats"
+use_news    ->               news_feed   : "News array"
+
+@enduml

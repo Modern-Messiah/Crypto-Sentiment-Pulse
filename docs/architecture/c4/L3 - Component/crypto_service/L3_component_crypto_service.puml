@@ -1,0 +1,64 @@
+@startuml L3_component_crypto_service
+left to right direction
+
+skinparam rectangle {
+    BackgroundColor<<component>> #438dd5
+    FontColor<<component>> #ffffff
+    BorderColor<<component>> #3c7fc0
+    BackgroundColor<<database>> #1168bd
+    FontColor<<database>> #ffffff
+    BorderColor<<database>> #0e4f96
+    BackgroundColor<<external>> #999999
+    FontColor<<external>> #ffffff
+    BorderColor<<external>> #888888
+}
+skinparam ArrowColor #666666
+skinparam FontName SansSerif
+
+title Component Diagram — Crypto Service (Market Data)
+
+rectangle "Crypto Service" {
+    rectangle "Main\n[main.py]" <<component>> as main
+
+    rectangle "BinancePriceStream\n[stream.py]" <<component>> as stream
+
+    together {
+        rectangle "ProcessorMixin\n[processor.py]" <<component>> as processor
+        rectangle "UpdaterMixin\n[updater.py]" <<component>> as updater
+        rectangle "PersistenceMixin\n[persistence.py]" <<component>> as persistence
+    }
+
+    rectangle "CoinGecko Client\n[coingecko.py]" <<component>> as coingecko
+}
+
+rectangle "Binance WS" <<external>> as binance
+rectangle "CoinGecko API" <<external>> as coingecko_ext
+database "Redis" <<database>> as redis
+database "PostgreSQL" <<database>> as db
+
+' Force stacking
+processor -[hidden]down-> updater
+updater   -[hidden]down-> persistence
+
+' Entry point
+main      ->              stream      : "start(symbols)"
+
+' Binance stream
+stream    -[#gray,dashed]-> binance   : "WSS Subscribe"
+binance   -[#gray,dashed]-> stream    : "Raw ticker data"
+
+' Processing pipeline
+stream    ->              processor   : "Normalize message"
+processor ->              updater     : "Update price buffer"
+
+' CoinGecko polling
+updater   -[#gray,dashed]-> coingecko : "Poll trending & market data"
+coingecko -[#gray,dashed]-> coingecko_ext : "HTTPS / REST"
+coingecko_ext -[#gray,dashed]-> coingecko : "API Response"
+
+' Outputs
+updater   -[#green,dashed]-> redis    : "PUBLISH crypto:updates\nSET crypto:fear_greed"
+updater   ->              persistence : "Trigger persist()"
+persistence -[#orange,dashed]-> db   : "Bulk INSERT PriceHistory\n(every 5s)"
+
+@enduml

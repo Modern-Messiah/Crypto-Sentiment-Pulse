@@ -1,0 +1,116 @@
+@startuml L2_sequence_containers
+skinparam sequence {
+    ActorBackgroundColor #08427b
+    ActorFontColor #ffffff
+    ParticipantBackgroundColor #438dd5
+    ParticipantFontColor #ffffff
+    ParticipantBorderColor #3c7fc0
+    DatabaseBackgroundColor #1168bd
+    DatabaseFontColor #ffffff
+    ArrowColor #666666
+    LifeLineBorderColor #666666
+    BoxBackgroundColor #f5f5f5
+    BoxBorderColor #cccccc
+}
+skinparam FontName SansSerif
+
+title Sequence Diagram — Container-to-Container Communication (L2)
+
+participant "Frontend" as frontend
+participant "Backend\n[FastAPI]" as backend
+participant "CryptoService" as crypto
+participant "NewsService" as news
+participant "CeleryWorker" as worker
+participant "CeleryBeat" as beat
+database "Redis" as redis
+database "PostgreSQL" as db
+
+== Scenario 1 — Cold Start & Startup Sequence ==
+
+note over db        : pg_isready healthcheck\npasses → healthy
+note over redis     : Port 6379 ready
+
+crypto      ->  redis   : aioredis connect
+news        ->  redis   : aioredis connect
+backend     ->  redis   : SUBSCRIBE crypto:updates\nPSUBSCRIBE news:*
+backend     ->  db      : SQLAlchemy SessionMaker init\nasync engine ready
+worker      ->  redis   : BRPOP celery (blocking)
+worker      ->  db      : SQLAlchemy connect
+beat        ->  redis   : Register periodic schedules
+frontend    ->  backend : HTTP readiness check
+
+== Scenario 2 — Price Data Lifecycle ==
+
+crypto      ->  crypto  : Normalize ticker (ProcessorMixin)
+crypto      ->  redis   : PUBLISH crypto:updates\n{prices: [...], fear_greed: N}
+crypto      ->  db      : INSERT price_history (bulk every 5s)
+
+note right of redis : Backend asyncio\nsubscriber wakes up
+redis       ->  backend : Message on crypto:updates
+activate backend
+backend     ->  frontend : WS PUSH\n{type: "update", data: {...}}
+deactivate backend
+
+note over beat : Periodic task fires\n(every N minutes)
+beat        ->  redis   : LPUSH celery\n[update_fear_greed_task]
+redis       ->  worker  : BRPOP — task dequeued
+activate worker
+worker      ->  db      : UPDATE fear_greed_index
+deactivate worker
+
+== Scenario 3 — News & Telegram Data Lifecycle ==
+
+news        ->  redis   : PUBLISH news:telegram\n{text, channel, timestamp}
+news        ->  redis   : PUBLISH news:cryptopanic\n{title, url, source}
+
+note right of redis : Celery picks up\nvia BRPOP — no direct call\nfrom NewsService to Worker
+redis       ->  worker  : BRPOP — persist_telegram_message
+activate worker
+worker      ->  db      : INSERT messages\nINSERT channels (upsert)
+deactivate worker
+
+redis       ->  worker  : BRPOP — fetch_and_persist_news
+activate worker
+worker      ->  db      : INSERT cryptopanic_news (upsert)
+deactivate worker
+
+note right of redis : Backend asyncio\nsubscriber wakes up
+redis       ->  backend : Message on news:telegram\nnews:cryptopanic
+activate backend
+backend     ->  frontend : WS PUSH {type: "news", data: {...}}
+deactivate backend
+
+== Scenario 4 — Historical Data (REST) ==
+
+frontend    ->  backend : GET /api/v1/prices
+activate backend
+backend     ->  redis   : GET crypto:prices (cache)
+alt Cache hit
+    redis   --> backend : Cached prices JSON
+else Cache miss
+    backend ->  db      : SELECT price_history\nORDER BY timestamp DESC
+    db      --> backend : OHLCV rows
+    backend ->  redis   : SET crypto:prices (cache)
+end
+backend     --> frontend : 200 OK JSON
+deactivate backend
+
+frontend    ->  backend : GET /api/v1/news
+activate backend
+backend     ->  db      : SELECT cryptopanic_news\nORDER BY published_at DESC
+db          --> backend : List[News]
+backend     --> frontend : 200 OK JSON
+deactivate backend
+
+frontend    ->  backend : GET /api/v1/sentiment/fear-greed
+activate backend
+backend     ->  redis   : GET crypto:fear_greed
+alt Key exists
+    redis   --> backend : {value, classification, timestamp}
+else Cold start — key missing
+    note right of backend : Returns default\n{value: 50, label: "Neutral"}
+end
+backend     --> frontend : 200 OK JSON
+deactivate backend
+
+@enduml

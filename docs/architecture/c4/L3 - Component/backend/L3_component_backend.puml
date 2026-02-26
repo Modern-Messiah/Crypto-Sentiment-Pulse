@@ -1,0 +1,73 @@
+@startuml L3_component_backend
+left to right direction
+
+skinparam rectangle {
+    BackgroundColor<<component>> #438dd5
+    FontColor<<component>> #ffffff
+    BorderColor<<component>> #3c7fc0
+    BackgroundColor<<database>> #1168bd
+    FontColor<<database>> #ffffff
+    BorderColor<<database>> #0e4f96
+    BackgroundColor<<external>> #999999
+    FontColor<<external>> #ffffff
+    BorderColor<<external>> #888888
+}
+skinparam actor {
+    BackgroundColor<<user>> #08427b
+    FontColor<<user>> #ffffff
+    BorderColor<<user>> #073b6e
+}
+skinparam ArrowColor #666666
+skinparam FontName SansSerif
+
+title Component Diagram — Backend Service (FastAPI)
+
+actor "Crypto User" <<user>> as user
+rectangle "Frontend SPA" <<external>> as frontend
+
+rectangle "Backend (FastAPI)" {
+    rectangle "WebSocket Hub\n[ws_manager.py]" <<component>> as ws_manager
+    rectangle "Redis Subscriber\n[asyncio task]" <<component>> as redis_sub
+
+    package "API Routers" {
+        rectangle "Prices Router\n[/api/v1/prices]" <<component>> as pr_router
+        rectangle "News Router\n[/api/v1/news]" <<component>> as news_router
+        rectangle "Sentiment Router\n[/api/v1/sentiment]" <<component>> as sent_router
+        rectangle "History Router\n[/api/v1/history]" <<component>> as hist_router
+    }
+}
+
+database "Redis" <<database>> as redis
+database "PostgreSQL" <<database>> as db
+
+' Force router stacking
+pr_router   -[hidden]down-> news_router
+news_router -[hidden]down-> sent_router
+sent_router -[hidden]down-> hist_router
+
+' User flow
+user        -[#blue,bold]->     frontend    : "Uses"
+
+' Frontend → WebSocket
+frontend    -[#blue,bold]->     ws_manager  : "WebSocket (/ws)"
+
+' Frontend → REST routers
+frontend    -[#blue,bold]->     pr_router   : "GET /prices"
+frontend    -[#blue,bold]->     news_router : "GET /news"
+frontend    -[#blue,bold]->     sent_router : "GET /sentiment"
+frontend    -[#blue,bold]->     hist_router : "GET /history"
+
+' Redis event pipeline
+redis       -[#green,dashed]->  redis_sub   : "SUBSCRIBE crypto:updates, news:*"
+redis_sub   -[#green,dashed]->  ws_manager  : "Trigger broadcast()"
+ws_manager  -[#blue,bold]->     frontend    : "Broadcast live JSON"
+
+' Routers → Redis cache
+pr_router   -[#orange,dashed]-> redis       : "GET latest price cache"
+sent_router -[#orange,dashed]-> redis       : "GET Fear & Greed index"
+
+' Routers → PostgreSQL
+news_router -[#orange,dashed]-> db          : "Query historical news"
+hist_router -[#orange,dashed]-> db          : "Query OHLCV data"
+
+@enduml

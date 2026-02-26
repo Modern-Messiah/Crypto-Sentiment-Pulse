@@ -1,0 +1,39 @@
+@startuml L1_system_context_v1
+left to right direction
+
+skinparam rectangle {
+    BackgroundColor<<system>> #1168bd
+    FontColor<<system>> #ffffff
+    BorderColor<<system>> #1059a0
+    BackgroundColor<<external>> #999999
+    FontColor<<external>> #ffffff
+    BorderColor<<external>> #888888
+}
+skinparam actor {
+    BackgroundColor<<user>> #08427b
+    FontColor<<user>> #ffffff
+    BorderColor<<user>> #073b6e
+}
+skinparam ArrowColor #666666
+skinparam FontName SansSerif
+
+title System Context Diagram for Crypto-Sentiment-Pulse (Minimal)
+
+together {
+    actor "==Crypto User\n<size:10>[Person]</size>\n\nA trader or analyst monitoring markets." <<user>> as user
+    rectangle "==Crypto-Sentiment-Pulse\n<size:10>[Software System]</size>\n\nAggregates live crypto prices, news,\nand Telegram messages." <<system>> as crypto_pulse
+}
+
+rectangle "==Binance\n<size:10>[External System]</size>\n\nLive market data provider." <<external>> as binance
+rectangle "==Telegram\n<size:10>[External System]</size>\n\nSocial messaging platform." <<external>> as telegram
+rectangle "==CryptoPanic\n<size:10>[External System]</size>\n\nCurated crypto news." <<external>> as cryptopanic
+
+binance  -[hidden]down-> telegram
+telegram -[hidden]down-> cryptopanic
+
+user         ->  crypto_pulse : "Views dashboard"
+crypto_pulse ->  binance      : "Fetches prices (WSS)"
+crypto_pulse ->  telegram     : "Scrapes messages (MTProto)"
+crypto_pulse ->  cryptopanic  : "Fetches news (REST)"
+
+@enduml

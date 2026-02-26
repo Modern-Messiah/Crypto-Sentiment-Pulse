@@ -1,0 +1,84 @@
+@startuml L2_container_v2
+left to right direction
+
+skinparam rectangle {
+    BackgroundColor<<container>> #438dd5
+    FontColor<<container>> #ffffff
+    BorderColor<<container>> #3c7fc0
+    BackgroundColor<<database>> #1168bd
+    FontColor<<database>> #ffffff
+    BorderColor<<database>> #0e4f96
+    BackgroundColor<<external>> #999999
+    FontColor<<external>> #ffffff
+    BorderColor<<external>> #888888
+}
+skinparam actor {
+    BackgroundColor<<user>> #08427b
+    FontColor<<user>> #ffffff
+    BorderColor<<user>> #073b6e
+}
+skinparam ArrowColor #666666
+skinparam FontName SansSerif
+
+title Container Diagram for Crypto-Sentiment-Pulse (Detailed Protocols)
+
+together {
+    actor "Crypto Analyst" <<user>> as user
+    rectangle "Frontend\n[Nginx / Vue 3]\n:3000" <<container>> as frontend
+}
+
+together {
+    rectangle "Backend API\n[FastAPI]\n:8080" <<container>> as backend
+    rectangle "Celery Worker\n[Python]" <<container>> as celery_worker
+    rectangle "Celery Beat\n[Python]" <<container>> as celery_beat
+}
+
+together {
+    rectangle "Crypto Service\n[Python]" <<container>> as crypto_service
+    rectangle "News Service\n[Python]" <<container>> as news_service
+}
+
+together {
+    database "Redis\n[Broker / PubSub]\n:6379" <<database>> as redis
+    database "PostgreSQL\n:5432" <<database>> as db
+}
+
+together {
+    rectangle "Binance WS" <<external>> as binance
+    rectangle "Telegram API" <<external>> as telegram
+    rectangle "CryptoPanic API" <<external>> as cryptopanic
+}
+
+' Force vertical stacking
+celery_worker    -[hidden]down-> celery_beat
+crypto_service   -[hidden]down-> news_service
+binance          -[hidden]down-> telegram
+telegram         -[hidden]down-> cryptopanic
+redis            -[hidden]down-> db
+
+' User flow
+user             -[#blue,bold]->      frontend       : "HTTPS"
+frontend         -[#blue,bold]->      backend        : "REST / WebSocket"
+
+' Backend
+backend          -[#green,dashed]->   redis          : "Pub/Sub (Subscribe)"
+backend          -[#orange,dashed]->  db             : "SQL (SQLAlchemy)"
+
+' Celery Worker — builds from ./backend
+celery_worker    -[#green,dashed]->   redis          : "BRPOP (Consume tasks)"
+celery_worker    -[#orange,dashed]->  db             : "SQL (Insert / Update)"
+
+' Celery Beat — scheduler only
+celery_beat      -[#green,dashed]->   redis          : "LPUSH (Schedule tasks)"
+
+' Crypto Service — has DATABASE_URL
+crypto_service   -[#green,dashed]->   redis          : "Pub/Sub (Publish prices)"
+crypto_service   -[#orange,dashed]->  db             : "SQL (Store OHLCV)"
+crypto_service   -[#gray,dashed]->    binance        : "WSS (Ticker stream)"
+
+' News Service — NO DATABASE_URL
+news_service     -[#green,dashed]->   redis          : "Pub/Sub (Publish messages)"
+news_service     -[#gray,dashed]->    telegram       : "MTProto / TCP"
+news_service     -[#gray,dashed]->    cryptopanic    : "HTTPS / REST"
+
+@enduml
