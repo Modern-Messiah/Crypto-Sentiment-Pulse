@@ -8,6 +8,7 @@ on:
 
 jobs:
   test-backend:
+    name: Backend Tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -19,13 +20,17 @@ jobs:
       - name: Install Dependencies
         run: |
           pip install -r backend/requirements.txt
-          pip install pytest
+          pip install pytest pytest-mock
       - name: Run Tests
+        env:
+          PYTHONPATH: ${{ github.workspace }}/backend
         run: |
           cd backend
           pytest
 
   test-crypto-service:
+    name: Crypto Service Tests
+    needs: test-backend
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -37,13 +42,17 @@ jobs:
       - name: Install Dependencies
         run: |
           pip install -r crypto_service/requirements.txt
-          pip install pytest
+          pip install pytest pytest-asyncio
       - name: Run Tests
+        env:
+          PYTHONPATH: ${{ github.workspace }}/crypto_service
         run: |
           cd crypto_service
           pytest
 
   test-news-service:
+    name: News Service Tests
+    needs: test-crypto-service
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -55,13 +64,17 @@ jobs:
       - name: Install Dependencies
         run: |
           pip install -r news_service/requirements.txt
-          pip install pytest
+          pip install pytest pytest-asyncio pytest-mock
       - name: Run Tests
+        env:
+          PYTHONPATH: ${{ github.workspace }}/news_service
         run: |
           cd news_service
           pytest
 
   test-frontend:
+    name: Frontend Tests
+    needs: test-news-service
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -80,10 +93,11 @@ jobs:
           cd frontend
           npm test
 
-  build-and-deploy:
-    needs: [test-backend, test-crypto-service, test-news-service, test-frontend]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+  deploy:
+    name: Deploy to Server
+    needs: test-frontend
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
       - uses: actions/checkout@v4
       - name: Deploy via SSH
