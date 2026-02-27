@@ -97,7 +97,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-media_path = "/data/media"
+media_path = settings.MEDIA_PATH
 if not os.path.exists(media_path):
     os.makedirs(media_path, exist_ok=True)
     logger.info(f"Created media directory: {media_path}")

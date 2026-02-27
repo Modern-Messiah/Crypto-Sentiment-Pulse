@@ -24,7 +24,9 @@ jobs:
       - name: Run Tests
         env:
           PYTHONPATH: ${{ github.workspace }}/backend
+          MEDIA_PATH: ./media
         run: |
+          mkdir -p backend/media
           cd backend
           pytest
 
