@@ -35,7 +35,10 @@ async def test_do_fetch_and_publish(mock_fetch, mock_celery):
     
     await _do_fetch_and_publish(mock_redis)
     
-    mock_celery.send_task.assert_called_once_with("app.tasks.cryptopanic_tasks.fetch_and_persist_news")
+    mock_celery.send_task.assert_called_once_with(
+        "app.tasks.cryptopanic_tasks.fetch_and_persist_news",
+        args=[[{"id": 1}]]
+    )
     mock_redis.publish.assert_called_once()
     
     args, _ = mock_redis.publish.call_args

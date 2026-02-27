@@ -33,8 +33,8 @@ async def test_get_trending_symbols_success():
 @pytest.mark.asyncio
 async def test_get_coins_markets_data():
     mock_data = [
-        {"id": "bitcoin", "total_value_locked": 1000, "price_change_percentage_24h": 5.0},
-        {"id": "ethereum", "total_value_locked": 500, "price_change_percentage_24h": -2.0}
+        {"id": "bitcoin", "market_cap": 1000, "price_change_percentage_24h": 5.0},
+        {"id": "ethereum", "market_cap": 500, "price_change_percentage_24h": -2.0}
     ]
     
     with patch("app.services.coingecko.httpx.AsyncClient.get") as mock_get:
