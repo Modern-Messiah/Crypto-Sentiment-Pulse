@@ -103,7 +103,6 @@ Comprehensive architectural diagrams and documentation are available in the [doc
 
 - **API Documentation:** Auto-generated Swagger (OpenAPI) documentation is exposed at `http://localhost:8080/docs`.
 - **System Architecture:** Detailed C4 models and behavioral sequence diagrams are available in the [Architecture Guide](./docs/architecture/c4/).
-- **Monitoring Setup:** Details on Grafana/Prometheus integration can be found in the monitoring configuration files.
 
 ---
 

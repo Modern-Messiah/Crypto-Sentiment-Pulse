@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     SECRET_KEY: str = "secret-key-goes-here"
     DATABASE_URL: str = "postgresql://user:pass@db:5432/cryptodb"
     REDIS_URL: str = "redis://redis:6379/0"
+    MEDIA_PATH: str = "/data/media"
 
     TRACKED_SYMBOLS: List[str] = [
         "BTCUSDT",
