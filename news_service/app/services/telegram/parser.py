@@ -24,7 +24,7 @@ class MessageParser:
             'id': msg_or_event.id,
             'channel_username': username,
             'channel_title': title,
-            'text': text_content,
+            'text': str(text_content),
             'views': getattr(msg_or_event, 'views', 0) or 0,
             'forwards': getattr(msg_or_event, 'forwards', 0) or 0,
             'date': msg_or_event.date.isoformat() if hasattr(msg_or_event, 'date') and msg_or_event.date else datetime.utcnow().isoformat() + "Z",

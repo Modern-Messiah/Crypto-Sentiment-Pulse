@@ -2,6 +2,7 @@ from datetime import datetime
 import logging
 from app.core.celery_app import celery_app
 from app.db.session import SessionLocal
+from sqlalchemy.dialects.postgresql import insert
 from app.models.message import Message
 from app.models.channel import Channel
 
@@ -14,23 +15,16 @@ def persist_telegram_message(message_data: dict):
     db = SessionLocal()
     try:
         username = message_data.get('channel_username', '').strip('@')
+        stmt = insert(Channel).values(
+            username=username,
+            title=message_data.get('channel_title', username),
+            is_active=True
+        ).on_conflict_do_nothing(index_elements=["username"])
+        db.execute(stmt)
+        db.flush()
         channel = db.query(Channel).filter(Channel.username == username).first()
-        
         if not channel:
-            try:
-                with db.begin_nested():
-                    channel = Channel(
-                        username=username,
-                        title=message_data.get('channel_title', username),
-                        is_active=True
-                    )
-                    db.add(channel)
-                db.flush()
-            except Exception:
-                db.rollback()
-                channel = db.query(Channel).filter(Channel.username == username).first()
-                if not channel:
-                    raise
+            raise Exception(f"Failed to get or create channel @{username}")
             
         tg_msg_id = message_data.get('id')
         grouped_id = message_data.get('grouped_id')

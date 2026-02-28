@@ -25,7 +25,7 @@ class MessagePublisher:
         try:
             celery_app.send_task(
                 "app.tasks.telegram_tasks.persist_telegram_message",
-                args=[msg_data]
+                args=[json.loads(json.dumps(msg_data, default=str))]
             )
         except Exception as e:
             logger.error(f"Error sending task to Celery: {e}")

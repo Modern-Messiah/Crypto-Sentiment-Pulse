@@ -117,7 +117,8 @@ class MessageProcessor:
                     await self.publisher.publish_to_redis(parsed_msg)
                     self.publisher.send_to_celery(parsed_msg)
 
-                logger.info(f"Processed {'edit' if is_edit else 'msg'} from @{username}: {text_content[:50]}...")
+                text_preview = str(text_content)[:50] if text_content else "[no text]"
+                logger.info(f"Processed {'edit' if is_edit else 'msg'} from @{username}: {text_preview}...")
             finally:
                 self.processing_ids.discard(msg_key)
 
