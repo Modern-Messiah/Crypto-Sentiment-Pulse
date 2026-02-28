@@ -1,5 +1,6 @@
 import pytest
 from unittest.mock import AsyncMock, patch, MagicMock
+from datetime import datetime, timezone
 from collections import deque
 from app.services.telegram.heartbeat import HeartbeatMonitor
 import asyncio
@@ -12,6 +13,7 @@ async def test_heartbeat_monitor_loop():
     mock_client.get_me.return_value = MagicMock(username="testuser")
     
     mock_msg = MagicMock(id=1, text="test heartbeat")
+    mock_msg.date = datetime.now(timezone.utc)
     mock_client.get_messages.return_value = [mock_msg]
     
     mock_processor = AsyncMock()
