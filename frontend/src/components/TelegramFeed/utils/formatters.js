@@ -8,6 +8,15 @@ export const formatTime = (dateStr) => {
     })
 }
 
+export const formatDate = (dateStr) => {
+    if (!dateStr) return ''
+    const date = new Date(dateStr)
+    return date.toLocaleDateString('en-US', {
+        day: 'numeric',
+        month: 'short'
+    })
+}
+
 export const formatViews = (views) => {
     if (!views) return '0'
     if (views >= 1000000) return (views / 1000000).toFixed(1) + 'M'

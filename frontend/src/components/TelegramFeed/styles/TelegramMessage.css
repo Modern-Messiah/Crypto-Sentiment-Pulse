@@ -116,6 +116,12 @@
     color: #ffa502;
 }
 
+.message-date {
+    margin-left: auto;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
 .telegram-message.new {
     animation: slideIn 0.3s ease-out;
 }

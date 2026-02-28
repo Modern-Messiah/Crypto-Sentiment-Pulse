@@ -43,6 +43,7 @@
                 <span>↗</span>
                 <span>{{ message.forwards }}</span>
             </div>
+            <div class="message-date">{{ formattedDate }}</div>
             <span v-if="message.is_demo" class="demo-badge">DEMO</span>
         </div>
 
@@ -80,11 +81,13 @@ const avatarLetter = computed(() => {
 
 import {
     formatTime,
+    formatDate,
     formatViews,
     formatTelegramText,
 } from "../utils/formatters.js";
 
 const formattedTime = computed(() => formatTime(props.message.date));
+const formattedDate = computed(() => formatDate(props.message.date));
 const formattedViews = computed(() => formatViews(props.message.views));
 const formattedText = computed(() => formatTelegramText(props.message.text));
 
