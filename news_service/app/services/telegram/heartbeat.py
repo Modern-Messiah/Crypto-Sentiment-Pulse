@@ -1,5 +1,5 @@
-import asyncio
 import logging
+from datetime import datetime, timezone, timedelta
 from collections import deque
 
 logger = logging.getLogger(__name__)
@@ -32,6 +32,13 @@ class HeartbeatMonitor:
                             if msgs:
                                 m = msgs[0]
                                 if not any(msg['id'] == m.id and msg['channel_username'] == username for msg in self.messages):
+                                    # Skip if message is older than 24 hours (avoid "phantom" old updates on reconnect)
+                                    msg_date = m.date.replace(tzinfo=timezone.utc) if m.date.tzinfo is None else m.date
+                                    now = datetime.now(timezone.utc)
+                                    if now - msg_date > timedelta(hours=24):
+                                        logger.debug(f"POLL: Skipping old message from @{username} (dated {msg_date})")
+                                        continue
+
                                     logger.info(f"POLL: Found new message from @{username}")
                                     await self.processor.process_raw_message(m, username, info['title'])
                         except Exception as poll_e:
