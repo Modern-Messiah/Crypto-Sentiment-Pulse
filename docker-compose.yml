@@ -134,8 +134,6 @@ services:
   redis:
     image: redis:7-alpine
     container_name: crypto_redis
-    sysctls:
-      - vm.overcommit_memory=1
     networks:
       - crypto-network
 
