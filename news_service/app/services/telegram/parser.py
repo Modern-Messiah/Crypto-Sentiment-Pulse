@@ -1,5 +1,6 @@
 import logging
-from datetime import datetime
+
+from app.services.telegram.datetime_utils import to_utc_z
 
 logger = logging.getLogger(__name__)
 
@@ -27,8 +28,8 @@ class MessageParser:
             'text': str(text_content),
             'views': getattr(msg_or_event, 'views', 0) or 0,
             'forwards': getattr(msg_or_event, 'forwards', 0) or 0,
-            'date': msg_or_event.date.isoformat() if hasattr(msg_or_event, 'date') and msg_or_event.date else datetime.utcnow().isoformat() + "Z",
-            'timestamp': datetime.utcnow().isoformat() + "Z",
+            'date': to_utc_z(msg_or_event.date if hasattr(msg_or_event, 'date') else None),
+            'timestamp': to_utc_z(),
             'is_edit': is_edit,
             'grouped_id': grouped_id,
             'has_media': False,

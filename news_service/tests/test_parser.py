@@ -1,5 +1,5 @@
-import pytest
-from datetime import datetime
+from datetime import datetime, timezone
+
 from app.services.telegram.parser import MessageParser
 
 class MockMessage:
@@ -58,3 +58,13 @@ def test_parse_edit_message():
     assert parsed is not None
     assert parsed['is_edit'] is True
     assert parsed['text'] == "Edited text"
+
+def test_parse_timezone_aware_date_normalizes_to_utc_z():
+    msg = MockMessage(
+        id=6,
+        text="Aware date",
+        date=datetime(2026, 3, 1, 11, 10, 5, tzinfo=timezone.utc),
+    )
+    parsed = MessageParser.parse(msg, username="test_chan", title="Test Channel")
+
+    assert parsed["date"] == "2026-03-01T11:10:05Z"

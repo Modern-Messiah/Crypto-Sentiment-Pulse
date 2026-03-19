@@ -1,12 +1,30 @@
-from datetime import datetime
 import logging
+from datetime import datetime, timezone
+
 from app.core.celery_app import celery_app
 from app.db.session import SessionLocal
 from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.exc import IntegrityError
 from app.models.message import Message
 from app.models.channel import Channel
 
 logger = logging.getLogger(__name__)
+
+
+def _parse_message_datetime(value: str | None) -> datetime:
+    if not value:
+        return datetime.now(timezone.utc).replace(tzinfo=None)
+
+    normalized = value.strip()
+    if normalized.endswith("Z") and ("+" in normalized[10:] or "-" in normalized[10:]):
+        normalized = normalized[:-1]
+    elif normalized.endswith("Z"):
+        normalized = normalized[:-1] + "+00:00"
+
+    parsed = datetime.fromisoformat(normalized)
+    if parsed.tzinfo is not None:
+        return parsed.astimezone(timezone.utc).replace(tzinfo=None)
+    return parsed
 
 @celery_app.task(name="app.tasks.telegram_tasks.persist_telegram_message")
 def persist_telegram_message(message_data: dict):
@@ -29,21 +47,18 @@ def persist_telegram_message(message_data: dict):
         tg_msg_id = message_data.get('id')
         grouped_id = message_data.get('grouped_id')
         
-        existing = None
-        if grouped_id:
+        existing = db.query(Message).filter(
+            Message.channel_id == channel.id,
+            Message.telegram_message_id == tg_msg_id
+        ).first()
+
+        if not existing and grouped_id:
             existing = db.query(Message).filter(
                 Message.channel_id == channel.id,
                 Message.grouped_id == grouped_id
             ).first()
 
         if not existing:
-            existing = db.query(Message).filter(
-                Message.channel_id == channel.id,
-                Message.telegram_message_id == tg_msg_id
-            ).first()
-
-        if not existing:
-
             new_msg = Message(
                 channel_id=channel.id,
                 telegram_message_id=tg_msg_id,
@@ -54,12 +69,23 @@ def persist_telegram_message(message_data: dict):
                 has_media=1 if message_data.get('has_media') else 0,
                 media_type=message_data.get('media_type'),
                 media_path=message_data.get('media_path'),
-                telegram_date=datetime.fromisoformat(message_data.get('date')) if message_data.get('date') else datetime.utcnow()
+                telegram_date=_parse_message_datetime(message_data.get('date'))
             )
             db.add(new_msg)
-            db.flush()
-            existing = new_msg
-            logger.info(f"Persisted new message {tg_msg_id} from @{username}")
+            try:
+                db.flush()
+            except IntegrityError:
+                db.rollback()
+                existing = db.query(Message).filter(
+                    Message.channel_id == channel.id,
+                    Message.telegram_message_id == tg_msg_id
+                ).first()
+                if not existing:
+                    raise
+                logger.info(f"Message {tg_msg_id} from @{username} already persisted by another worker")
+            else:
+                existing = new_msg
+                logger.info(f"Persisted new message {tg_msg_id} from @{username}")
         else:
             existing.views = message_data.get('views', existing.views)
             existing.forwards = message_data.get('forwards', existing.forwards)

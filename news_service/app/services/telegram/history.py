@@ -1,6 +1,7 @@
 import logging
-from datetime import datetime
 from collections import deque
+
+from app.services.telegram.datetime_utils import to_utc_z
 
 logger = logging.getLogger(__name__)
 
@@ -34,11 +35,9 @@ class HistoryFetcher:
                         'text': text_content,
                         'views': getattr(msg, 'views', 0) or 0,
                         'forwards': getattr(msg, 'forwards', 0) or 0,
-                        'date': msg.date.isoformat() if hasattr(msg, 'date') and msg.date else datetime.utcnow().isoformat() + "Z",
-                        'timestamp': datetime.utcnow().isoformat() + "Z"
+                        'date': to_utc_z(msg.date if hasattr(msg, 'date') else None),
+                        'timestamp': to_utc_z()
                     }
-                    if not parsed_msg['date'].endswith('Z'):
-                        parsed_msg['date'] += 'Z'
                     self.messages.appendleft(parsed_msg)
 
                     self.publisher.send_to_celery(parsed_msg)

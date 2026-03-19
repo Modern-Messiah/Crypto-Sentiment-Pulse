@@ -1,6 +1,8 @@
 import pytest
 from unittest.mock import AsyncMock, patch, MagicMock
 from collections import deque
+from datetime import datetime, timezone
+
 from app.services.telegram.history import HistoryFetcher
 
 @pytest.mark.asyncio
@@ -27,3 +29,32 @@ async def test_history_fetcher():
     assert messages[0]["id"] == 2
     
     assert mock_publisher.send_to_celery.call_count == 2
+
+@pytest.mark.asyncio
+async def test_history_fetcher_normalizes_timezone_aware_dates():
+    mock_client = AsyncMock()
+    aware_date = datetime(2026, 3, 1, 11, 10, 5, tzinfo=timezone.utc)
+    mock_msg = MagicMock(
+        id=10,
+        text="history aware",
+        date=aware_date,
+        views=1,
+        forwards=0,
+        photo=None,
+        video=None,
+        document=None,
+        poll=None,
+        venue=None,
+        geo=None,
+    )
+    mock_client.get_messages.return_value = [mock_msg]
+
+    mock_publisher = MagicMock()
+    messages = deque(maxlen=10)
+    channels = {"test_chan": {"id": 1234, "title": "Test Title"}}
+
+    fetcher = HistoryFetcher(mock_client, messages, channels, mock_publisher)
+
+    await fetcher.fetch()
+
+    assert messages[0]["date"] == "2026-03-01T11:10:05Z"
